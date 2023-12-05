@@ -1,0 +1,24 @@
+- row height
+- padding rows
+- padding row height
+- starting row
+- column width
+- padding columns
+- padding column width
+- starting column
+- cell style
+- every cell style
+- header cell style
+- every header cell style
+- header row color
+- even row color
+- odd row color
+- borders
+- row borders
+- column borders
+- border style
+- border width
+- selected cell
+- formula
+- show formula bar
+- scale

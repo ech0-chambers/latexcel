@@ -1,0 +1,8 @@
+test.*
+**/*.aux
+**/*.log
+**/*.out
+**/*.toc
+**/nord.tex
+**/rpd.tex
+**/ncl.tex

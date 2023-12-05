@@ -1,0 +1,319 @@
+\documentclass[table]{article}
+
+\usepackage[margin = 0.7in]{geometry}
+\usepackage{nicetables}
+\usepackage{../latexcel}
+\usepackage{descriptions}
+\usepackage[background, frame = true, roundedcorners]{qolistings}
+\qolstset{lst options = {language = [latex]tex}}
+\input{rpd.tex}
+
+\usepackage{tikz}
+\usetikzlibrary{calc, positioning, shapes, decorations, decorations.pathreplacing, decorations.pathmorphing, decorations.markings, arrows, arrows.meta, fit, intersections, tikzmark, patterns, patterns.meta}
+\usepackage{siunitx}
+\usepackage{amsmath, amssymb}
+
+\newcommand{\st}{\textsuperscript{st}}
+\newcommand{\nd}{\textsuperscript{nd}}
+\newcommand{\rd}{\textsuperscript{rd}}
+\renewcommand{\th}{\textsuperscript{th}}
+
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks = true,
+    linkcolor = Accent4,
+    urlcolor = Red,
+    citecolor = Red,
+}
+
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{centeredbox}{
+    colframe = ForegroundColour,
+    colback = white,
+    rounded corners,
+    before upper = \centering,
+}
+
+\newcommand{\loadexample}[1]{
+    \qoinputlisting[mdframed options = {nobreak=true}]{examples/#1.tex}
+    \begin{centeredbox}
+        % \fontfamily{phv}\selectfont
+        \input{examples/#1.tex}
+    \end{centeredbox}
+}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault, light]{FiraSans}
+% \usepackage{helvet}
+% \renewcommand{\familydefault}{\sfdefault}
+\usepackage[scale = 0.85]{FiraMono}
+
+\newcommand{\semibold}[1]{{\firabook #1}}
+\newcommand{\emphasis}[1]{{\color{Red}\semibold{#1}}}
+\usepackage{indentfirst}
+
+\renewcommand*\oldstylenums[1]{{#1}}
+\renewcommand{\bfdefault}{sb}
+% \let\textbf\semibold
+% \let\bfseries\semibold
+\usepackage{setspace}
+\onehalfspacing
+
+
+\usepackage{titlesec}
+\usepackage{tikzpagenodes}
+
+\def\titlelineindent{0.5cm}
+\titleformat
+   {\section}
+   {\normalfont\color{Accent1}\LARGE}
+   {}
+   {0pt}
+   {\tikzmarknode{title}}
+   [
+        {
+            \tikz[
+                overlay, 
+                remember picture
+            ]{
+                \coordinate (rule start) at ($(title.south west) + (0, -0.5em)$); 
+                \draw[Accent1, thick, shorten > = \titlelineindent, shorten < = \titlelineindent] (rule start) -- (current page text area.east |- rule start);
+            }
+        }
+        \vspace{-0.5em}
+        \vspace{-2\parskip} % Returns us to normal spacing
+    ]
+
+\titleformat
+    {\subsection}
+    {\normalfont\color{Accent1}\Large}
+    {}
+    {0pt}
+    {\tikzmarknode{title}}
+    [
+         {
+             \tikz[
+                 overlay, 
+                 remember picture
+             ]{
+                 \coordinate (rule start) at ($(title.south west) + (0, -0.5em)$); 
+                 \draw[Accent1, shorten < = \titlelineindent] (rule start) -- (current page text area.center |- rule start);
+             }
+         }
+         \vspace{-0.5em}
+         \vspace{-2\parskip}
+     ]
+
+\titleformat
+    {\subsubsection}
+    {\normalfont\color{ForegroundColour}\large}
+    {}
+    {0pt}
+    {\tikzmarknode{title}}
+    [
+         {
+             \tikz[
+                 overlay, 
+                 remember picture
+             ]{
+                 \coordinate (rule start) at ($(title.south west) + (0, -0.5em)$); 
+                 \draw[ForegroundColour, shorten < = \titlelineindent, shorten > = \titlelineindent] (rule start) -- (title.east |- rule start);
+             }
+         }
+         \vspace{-0.5em}
+         \vspace{-2\parskip}
+     ]
+
+\newcommand{\divider}[1][Blue]{
+    \begin{center}
+        \color{#1}
+        \rule{0.75\textwidth}{1pt}
+    \end{center}
+}
+
+\title{LaTeXcel Package}
+\author{Peter Brookes Chambers}
+\date{Version 1.0, 2023/12/03}
+
+\definecolor{Sheets_Blue}{HTML}{5B95F9}
+\definecolor{Sheets_PaleBlue}{HTML}{E8F0FE}
+
+\newcommand{\cell}[2][SheetsOrange]{
+    \texttt{\color{#1}#2}
+}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\clearpage
+
+\section{Introduction}
+
+This package provides an environment which mimics the appearance of a spreadsheet. It is modeled after the Google Sheets interface, but is also very similar to that of Excel. It is best seen with an example (alignment in the source code is purely for readability):
+
+\loadexample{full_example}
+
+The package is loaded as normal with \verb|\usepackage{latexcel}|. It relies on the following packages:
+\begin{itemize}
+    \item \texttt{tikz} for all graphical elements
+    \item \texttt{xcolor} for colours
+    \item \texttt{environ} for the environment
+    \item \LaTeX3 syntax, for all options and content processing
+\end{itemize}
+
+Note that, since the graphics are rendered by \LaTeX, the font used will significantly impact the appearance of the tables. Of particular note, the ``{\texttt{\textit{\fontfamily{cmr}\selectfont f}}\hspace{-0.5ex}\texttt{\fontfamily{cmr}\selectfont x}}'' in the formula bar may appear strange in certain fonts. In this document, the \texttt{Fira Sans} and \texttt{Fira Mono} fonts are used, which are freely available on CTAN. The Helvetica font is also a very close match to the Arial font used by default in Google Sheets.
+
+\section{Environments and Colours}
+
+The package provides a single environment, \verb|latexcel|, which takes one optional argument; a comma-separated list of key-value pairs. These are detailed in the next section. The contents of the environment should follow the same syntax as a \texttt{tabular} environment: lines delimited by a double backslash (\verb|\\|), and columns delimited by an ampersand (\verb|&|). The final line should \emphasis{not} be terminated with a double backslash.
+
+In addition to the \verb|latexcel| environment, the package provides a number of colours which mimic those used in Google Sheets. These are shown in Table \ref{tab:colours}.
+
+\begin{table}[h!]
+    \centering
+
+    \begin{nicetable}[
+        array stretch = 1.5,
+        column separation = 1.5em,
+        cell style = {\color{ForegroundColour}\ttfamily},
+        header row color = Blue,
+        every header cell style = \color{white}\textbf,
+        row colors = {BackgroundColour, Surface7},
+        row separator = false,
+        separator color = ForegroundColour
+    ]{|lcl|}
+        Name & Example & Alias \\
+        SheetsOrange    & \color{SheetsOrange}A1:B3 \tikz{\fill[SheetsOrange] (0,0) rectangle (1, 0.75em)} & Sheets1   \\
+        SheetsPurple    & \color{SheetsPurple}A1:B3 \tikz{\fill[SheetsPurple] (0,0) rectangle (1, 0.75em)} & Sheets2   \\
+        SheetsCyan      & \color{SheetsCyan}  A1:B3 \tikz{\fill[SheetsCyan  ] (0,0) rectangle (1, 0.75em)} & Sheets3   \\
+        SheetsMaroon    & \color{SheetsMaroon}A1:B3 \tikz{\fill[SheetsMaroon] (0,0) rectangle (1, 0.75em)} & Sheets4   \\
+        SheetsBlue      & \color{SheetsBlue}  A1:B3 \tikz{\fill[SheetsBlue  ] (0,0) rectangle (1, 0.75em)} & Sheets5   \\
+        SheetsYellow    & \color{SheetsYellow}A1:B3 \tikz{\fill[SheetsYellow] (0,0) rectangle (1, 0.75em)} & Sheets6   \\
+        SheetsGreen     & \color{SheetsGreen} A1:B3 \tikz{\fill[SheetsGreen ] (0,0) rectangle (1, 0.75em)} & Sheets7   \\
+        SheetsBrown     & \color{SheetsBrown} A1:B3 \tikz{\fill[SheetsBrown ] (0,0) rectangle (1, 0.75em)} & Sheets8 
+    \end{nicetable}
+
+    \caption{The colours provided by the \texttt{latexcel} package. These are in the same order in which Google sheets will apply them to cell ranges in formulae.}
+    \label{tab:colours}
+\end{table}
+
+\section{Options}
+
+The \texttt{latexcel} environment takes a number of options, which are described below. These options are passed as a set of comma-separated key-value pairs to the \texttt{latexcel} environment. The option is given on the left, below which is the default (the value used if the option is not specified), and the initial value (if any) is given in brackets; this is the value used if the option is specified but no value is given.
+
+\emphasis{Note:} all options which use colours use the US spelling ``color'' rather than the UK spelling ``colour'' which is used in the \textit{text} of this documentation.
+
+\descriptionsset{
+    item style      = \color{Accent4}\ttfamily,
+    subitem style   = \color{Accent3}\footnotesize\ttfamily,
+    divider style   = Red,
+    array stretch   = 1.5,
+}
+
+\begin{descriptions}[width = 1.5in]
+    row height              & 1             | Accepts any float, which is interpreted as a height in centimetres. This sets the height of all cells in the table, including headers. It is not possible to set the height of individual rows. \\
+    padding rows            & 1             | Accepts any non-negative integer. This sets the number of additional rows rendered before and after the table. Be sure that this and the \texttt{starting row} option are set appropriately to avoid unexpected row numbering -- they are \emphasis{not} checked for consistency. \\
+    padding row height      & 0.65          | Accepts any float, which is interpreted as a height in centimetres. This sets the height of the padding rows. \\
+    starting row            & 2             | Accepts any positive integer. This sets the number of the first row in the table (the header row). This is absolute, so padding row numbering is calculated relative to this value. If the number of padding rows is greater than or equal to this value, some padding rows will be rendered with row numbers less than $1$. \\
+    column width            & 4             | Accepts any float, which is interpreted as a width in centimetres. This sets the width of all columns in the table. It is not possible to set the width of individual columns. \\
+    padding columns         & 1             | Accepts any non-negative integer. This sets the number of additional columns rendered before and after the table. Be sure that this and the \texttt{starting column} option are set appropriately to avoid unexpected column numbering -- they are \emphasis{not} checked for consistency. \\
+    padding column width    & 0.65          | Accepts any float, which is interpreted as a width in centimetres. This sets the width of the padding columns. \\
+    starting column         & 2             | Accepts any positive integer. This sets the index of the first column in the table (the leftmost column). Column indices are rendered as letters (in the style of Excel or Google Sheets), with $1$ corresponding to \texttt{A}. This is absolute, so padding column numbering is calculated relative to this value. If the number of padding columns is greater than or equal to this value, some padding columns will be rendered with column indices less than $1$. This will result in unexpected characters being rendered as part of the table. \emphasis{It is vital to avoid this.} \\
+    cell style              & \{\}          | Accepts a comma-separated list of commands to apply to the non-header cell content, cell by cell. This can be empty, a single value, or multiple values. If the number of styles is less than the number of columns, the styles are repeated, allowing for (for example) alternating styles. The final token in each style may take the content of the cell as an argument, for example \texttt{\textbackslash textbf} is acceptable. \\
+    every cell style        & \{\}          | Accepts any commands (\emphasis{not} a list of commands), to be applied to every non-header cell, after any cell-specific styles specified in \texttt{cell style}. The final token in \texttt{every cell style} may take the cell contents as an argument, after any cell-specific styles have been applied. In effect, the order is \texttt{\textbackslash everycellstyle\{\textbackslash cellstyle\{cell contents\}\}}. This allows for styling specified in \texttt{cell style} to overwrite the styling specified in \texttt{every cell style}. \\
+    header cell style       & \{\}          | Accepts a comma-separated list of commands to apply to the header cell content, cell by cell. This can be empty, a single value, or multiple values. If the number of styles is less than the number of columns, the styles are repeated, allowing for (for example) alternating styles. The final token in each style may take the content of the header as an argument, for example \texttt{\textbackslash textbf} is acceptable. \\
+    every header cell style & \{\}          | Accepts any commands (\emphasis{not} a list of commands), to be applied to every header cell, after any cell-specific styles specified in \texttt{header cell style}. The final token in \texttt{every header cell style} may take the header cell contents as an argument, after any cell-specific styles have been applied. In effect, the order is \texttt{\textbackslash everyheadercellstyle\{\textbackslash headercellstyle\{header cell contents\}\}}. This allows for styling specified in \texttt{header cell style} to overwrite the styling specified in \texttt{every header cell style}.\\
+    header row color        & white         | Accepts any colour, including colour combinations such as \texttt{blue!50!white}. This sets the background colour of the header cells. \\
+    even row color          & white         | Accepts any colour, including colour combinations such as \texttt{blue!50!white}. This sets the background colour of the even-numbered rows. \\
+    odd row color           & white         | Accepts any colour, including colour combinations such as \texttt{blue!50!white}. This sets the background colour of the odd-numbered rows. \\
+    borders                 & true (true)   | Boolean. If \texttt{true}, borders are rendered around the table and between columns and rows according to \texttt{row borders} and \texttt{column borders}. If \texttt{false}, no borders are rendered, overwriting the values of \texttt{row borders} and \texttt{column borders}. \\
+    row borders             & false (true)  | Boolean. If \texttt{true}, borders are rendered between rows. If \texttt{false}, no borders are rendered between rows, except for the header row. Borders are always rendered on the outside of the table, unless \texttt{borders = false} \\
+    column borders          & true (true)   | Boolean. If \texttt{true}, borders are rendered between columns. If \texttt{false}, no borders are rendered between columns. Borders are always rendered on the outside of the table, unless \texttt{borders = false} \\
+    border style            & \{\}          | Accepts any valid tikz style, such as ``\texttt{dashed, draw = red}''. This sets the style of the borders, appended to a default style of ``\texttt{line width = <width>, black}'', where \texttt{<width>} is specified by the \texttt{border width} option. \\
+    border width            & 0.75pt        | Accepts any \LaTeX{} dimension, such as \texttt{1mm} or \texttt{0.5pt}. This sets the line width of the borders. \\
+    selected cell           & \{\}          | Accepts a comma-separated pair of integers, which specify the row and column of the selected cell within the table; i.e. such that the first header is \texttt{\{1,1\}}. Padding cells can be selected, but setting this value to a cell which is not rendered (i.e, not within the table and not within the padding rows or columns) will throw an error. This is not checked internally. The selected cell will be highlighted, and its contents displayed in the formula bar if \texttt{formula} is not set. \\
+    formula                 & \{\}          | Accepts a token list (i.e, standard \LaTeX\ syntax) to be displayed in the formula bar. This is prepended by an equals sign, and rendered in the \texttt{\textbackslash ttfamily} font. If this is not set, the contents of the selected cell are displayed instead. \\
+    show formula bar        & true (true)   | Boolean. If \texttt{true}, the formula bar is rendered, including the formula. If \texttt{false}, the entire formula bar is not rendered, and the picture stops at the top of the column labels. \\
+    scale                   & 1             | Accepts any float. This scales the entire picture by the given factor using a \texttt{scalebox}.
+\end{descriptions}
+
+\clearpage 
+\section{Examples}
+
+\subsection{Default}
+
+With no options specified, the table is rendered as follows:
+
+\loadexample{default}
+
+\clearpage 
+
+\subsection{Background Colours}
+
+Background colours can be specified for the header row, and for odd and even rows separately. The example below uses the colours from the Ros\'e Pine Dawn palette, which can be found here: \url{https://rosepinetheme.com}. The option \texttt{header cell style} is also used to set the header text to an appropriate colour.
+
+\loadexample{background_colours}
+
+\clearpage 
+
+\subsection{Text Formatting}
+
+The formatting for the text in cells can be specified using \texttt{cell style} and \texttt{every cell style} for non-header cells, and \texttt{header cell style} and \texttt{every header cell style} for header cells. The ``\texttt{every}'' variant is applied to each cell, while the non-``\texttt{every}'' variant can be used to specify formatting for each column individually, and overrides the ``\texttt{every}'' variant. The example below makes use of the \texttt{siunitx} package to format the numbers in the table with units.
+
+\loadexample{text_formatting}
+
+\clearpage 
+
+\subsection{Padding and Cell Addresses}
+
+The \texttt{padding rows} and \texttt{padding columns} options can be used specify the number of additional rows and columns to render before and after the table. Setting this to at least $1$ helps to sell the rendered picture as a genuine extract from Google Sheets, but it is not necessary. The example below includes no padding rows or columns, with the table starting at the cell \cell{A1}.
+
+\loadexample{no_padding}
+
+In the example below, the table starts at \cell{F3}, with $2$ padding columns and $1$ padding row. Note that the row and column numbering is absolute, so the padding rows and columns are numbered relative to the starting row and column. This means that the labelled columns start at \cell{D} and the labelled rows start at \cell{2}.
+
+\loadexample{padding}
+
+\clearpage 
+
+\subsection{Cell Sizing}
+
+Cell sizes can be specified for the table cells and the padding cells separately, always in cenitmetres. The example below uses a smaller row height than the default for the table cells, and a wider column width for the padding cells. The \texttt{scale} option can also be used to scale the entire picture; here, it is used to shrink the picture to $80\%$ of its original size.
+
+\loadexample{cell_sizing}
+
+\clearpage 
+
+\subsection{Borders}
+
+By default, the table will include a border around the entire table, as well as between the columns and to separate the header row from the table body. Passing \texttt{borders = false} will remove all borders, overriding all other border options. This is shown below, with some background colours.
+
+\loadexample{no_borders}
+
+\clearpage 
+
+Row borders and column borders can be enabled or disabled separately. The example below shows both in their non-default state.
+
+\loadexample{row_column_borders}
+
+\clearpage 
+
+The border styling can be specified with the \texttt{border style} option. This option is passed to the \texttt{tikz} \texttt{draw} command, so any valid \texttt{tikz} styling can be used. It is appended to ``\texttt{line width = <width>, black}'' (where \texttt{<width>} is specified with the \texttt{border width} option), so it can override these options if desired. The example below uses a dashed line of a different colour. Additionally, the option \texttt{border width} is used to increase the width of the borders.
+
+\loadexample{border_style}
+
+\clearpage 
+
+\subsection{Highlighting a Cell}
+
+The \texttt{selected cell} option can be used to highlight a cell, and display its contents in the formula bar. The example below highlights the cell \cell{D3}, which is in the 3\rd column and 2\nd row of the table. The coordinates are $1$-indexed, starting from the top-left cell of the table (i.e, the first header cell). Note that the cell contents are displayed in the formula bar, as well as the selected cell address in the top left.
+
+\loadexample{selected_cell}
+
+\end{document}

@@ -1,0 +1,267 @@
+\ProvidesPackage{nicetables}[2023/12/03 v1.0 Nice tables]
+
+\RequirePackage[table]{xcolor}
+\RequirePackage{longtable}
+\RequirePackage{environ}
+
+
+\let\oldarraystretch\arraystretch
+\newcommand{\setarraystretch}[1]{\let\oldarraystretch\arraystretch\renewcommand{\arraystretch}{#1}}
+\newcommand{\resetarraystretch}{\let\arraystretch\oldarraystretch}
+
+
+\ExplSyntaxOn
+
+\cs_new_protected:Nn \seq_join:Nn{
+    % should act like "#2.join(#1) in python
+    % #1 is the sequence to join
+    % #2 is the separator
+    \seq_map_indexed_inline:Nn #1 {
+        \int_compare:nNnTF {##1} = {1} {
+            ##2
+        } {
+            #2 ##2
+        }
+    }
+}
+
+\cs_new_protected:Nn \seq_join:Nnn{
+    % should act like "#2.join(#1) in python
+    % #1 is the sequence to join
+    % #2 is the separator
+    % #3 is prepended to each element
+    \seq_map_indexed_inline:Nn #1 {
+        \int_compare:nNnTF {##1} = {1} {
+           \group_begin: #3 {##2}\group_end:
+        } {
+            #2 \group_begin: #3 {##2}\group_end:
+        }
+    }
+}
+
+\cs_new_protected:Nn \seq_if_empty_or_blank:NTF {
+    % Check if the sequence is empty.
+    % If not, check that if the sequence is of length 1, that the first element is blank.
+    \seq_if_empty:NTF #1 {#2} {
+        \seq_get:NN #1 \l_tmpa_tl
+        \tl_if_blank:VTF \l_tmpa_tl {#2} {#3}
+    }
+}
+
+\tl_new:N \l_nicetable_every_header_cell_style_tl
+\tl_new:N \l_nicetable_every_cell_style_tl
+
+\keys_define:nn {nicetable} {
+    header~rows .int_set:N = \l_nicetable_header_rows_int,
+    header~rows .initial:n = 1,
+    % header~cell~style .code:n = \tl_set:Nn \l_nicetable_header_cell_style_tl {#1},
+    header~cell~style .tl_set:N = \l_nicetable_header_cell_style_tl,
+    header~cell~style .initial:n = {},
+    every~header~cell~style .code:n = \tl_set:Nn \l_nicetable_every_header_cell_style_tl {#1},
+    every~header~cell~style .initial:n = {\bfseries},
+    header~row~color .tl_set:N = \l_nicetable_header_row_color_tl,
+    header~row~color .initial:n = {white},
+    % row~colors .code:n = \tl_set:Nn \l_nicetable_row_colors_tl {#1},
+    row~colors .tl_set:N = \l_nicetable_row_colors_tl,
+    row~colors .initial:n = {},
+    cell~style .tl_set:N = \l_nicetable_cell_style_tl,
+    cell~style .initial:n = {},
+    every~cell~style .code:n = \tl_set:Nn \l_nicetable_every_cell_style_tl {#1},
+    every~cell~style .initial:n = {},
+    row~separator .bool_set:N = \l_nicetable_row_separator_bool,
+    row~separator .initial:n = true,
+    row~separator .default:n = true,
+    header~separator .bool_set:N = \l_nicetable_header_separator_bool,
+    header~separator .initial:n = true,
+    header~separator .default:n = true,
+    separator~color .tl_set:N = \l_nicetable_separator_color_tl,
+    separator~color .initial:n = {black},
+    array~stretch .fp_set:N = \l_nicetable_array_stretch_fp,
+    array~stretch .initial:n = {1.0},
+    column~separation .dim_set:N = \l_newtable_column_separation_dim,
+    column~separation .initial:n = {1em},
+}
+
+\newcommand{\nicetableset}[1]{
+    \keys_set:nn {nicetable} {#1}
+}
+
+\seq_new:N \g_nicetable_seq
+\seq_new:N \l_nicetable_row_seq
+\seq_new:N \g_nicetable_cell_style_seq
+\seq_new:N \l_nicetable_row_out_seq
+\int_new:N \g_nicetable_num_styles_int
+\seq_new:N \g_nicetable_header_style_seq
+\seq_new:N \l_nicetable_header_row_out_seq
+\int_new:N \g_nicetable_num_header_styles_int
+\int_new:N \l_nicetable_num_rows_int
+\tl_new:N \l_nicetable_style_tl
+\tl_new:N \l_nicetable_header_style_tl
+\seq_new:N \l_nicetable_row_colors_seq
+\NewEnviron{nicetable}[2][]{
+    \keys_set:nn {nicetable} {#1}
+    \seq_set_split:NnV \g_nicetable_seq {\\} \BODY
+    % Prepare the cell styles, which may be different for each column
+    \seq_set_split:NnV \g_nicetable_cell_style_seq {,} \l_nicetable_cell_style_tl
+    \int_gset:Nn \g_nicetable_num_styles_int {\seq_count:N \g_nicetable_cell_style_seq}
+    \tl_set:Nn \l_nicetable_style_tl {} % empty as the default
+    % if there is only one style, set it now
+    \int_compare:nNnTF {\g_nicetable_num_styles_int} = {1} {
+        \tl_set:Nn \l_nicetable_style_tl {\l_nicetable_cell_style_tl}
+    } {
+        % do nothing
+    }
+    % Do the same for the header row
+    \seq_set_split:NnV \g_nicetable_header_style_seq {,} \l_nicetable_header_cell_style_tl
+    \int_set:Nn \g_nicetable_num_header_styles_int {\seq_count:N \g_nicetable_header_style_seq}
+    \tl_set:Nn \l_nicetable_header_style_tl {} % empty as the default
+    % if there is only one style, set it now
+    \int_compare:nNnTF {\g_nicetable_num_header_styles_int} = {1} {
+        \tl_set:Nn \l_nicetable_header_style_tl {\l_nicetable_header_cell_style_tl}
+    } {
+        % do nothing
+    }
+    \let\oldarraystretch\arraystretch
+    \renewcommand{\arraystretch}{\fp_to_decimal:N \l_nicetable_array_stretch_fp}
+    \setlength{\tabcolsep}{\l_newtable_column_separation_dim}
+    % Row colours
+    % \tl_use:N \l_nicetable_row_colors_tl
+    % get the row colours
+    \seq_set_split:NnV \l_nicetable_row_colors_seq {,} \l_nicetable_row_colors_tl
+    % number of colours specified
+    \int_set:Nn \l_tmpa_int {\seq_count:N \l_nicetable_row_colors_seq}
+    % if there's no colours specified, then do nothing.
+    \seq_if_empty_or_blank:NTF \l_nicetable_row_colors_seq {
+        % do nothing
+    }{
+        % if there's only one colour specified, apply it to both odd and even rows
+        \int_set:Nn \l_tmpb_int {\l_nicetable_header_rows_int+1}
+        \int_compare:nNnTF {\l_tmpa_int} = {1} {
+            \rowcolors{\l_tmpb_int}{\seq_item:Nn \l_nicetable_row_colors_seq {1}}{\seq_item:Nn \l_nicetable_row_colors_seq {1}}
+        } {
+            % If the start row is even, then swap the colours
+            \int_compare:nNnTF {\int_mod:nn {\l_tmpb_int} {2}} = {0} {
+                \rowcolors{\l_tmpb_int}{\seq_item:Nn \l_nicetable_row_colors_seq {2}}{\seq_item:Nn \l_nicetable_row_colors_seq {1}}
+            } {
+                \rowcolors{\l_tmpb_int}{\seq_item:Nn \l_nicetable_row_colors_seq {1}}{\seq_item:Nn \l_nicetable_row_colors_seq {2}}
+            }
+        }
+    }
+    % set the row colours, starting at the row after the header row
+    \begin{tabular}{#2}
+    % set the arrayrulecolor
+    \arrayrulecolor{\l_nicetable_separator_color_tl}
+    % % if row separator is true, then add a \hline
+    \bool_if:NTF \l_nicetable_row_separator_bool {
+        \hline
+    } {
+        \bool_if:NTF \l_nicetable_header_separator_bool {
+            \hline
+        } {}
+    }
+    \int_gset:Nn \l_nicetable_num_rows_int {\seq_count:N \g_nicetable_seq}
+    \seq_map_indexed_inline:Nn \g_nicetable_seq {
+        % if ##1 is less than or equal to the number of header rows, then parse as header
+        \int_compare:nNnTF {\l_nicetable_header_rows_int} < {##1} {
+            % NON HEADER ROW     
+            \int_compare:nNnTF {\l_nicetable_num_rows_int} > {##1} {
+                % NOT LAST ROW
+                \parse_nicetable_row:n {##2} \\
+                \bool_if:NTF \l_nicetable_row_separator_bool {
+                    \hline
+                } {
+                    % do nothing
+                }
+            }{
+                % LAST ROW
+                \parse_nicetable_row:n {##2}
+            }
+        } {
+            % HEADER ROW
+            \int_compare:nNnTF {\l_nicetable_num_rows_int} > {##1} {
+                % NOT LAST ROW
+                \parse_nicetable_header_row:n {##2} \\
+                \bool_if:NTF \l_nicetable_row_separator_bool {
+                    \hline
+                } {}
+                % if header separator is true, then add a \hline
+                \bool_if:NTF \l_nicetable_header_separator_bool {
+                    \hline
+                } {}
+            }{
+                % LAST ROW
+                \parse_nicetable_header_row:n {##2}
+            }
+        }
+    }
+    \bool_if:NTF \l_nicetable_row_separator_bool {
+        \\\hline
+    } {
+        \bool_if:NTF \l_nicetable_header_separator_bool {
+            \\\hline
+        } {}
+    }
+    \end{tabular}
+    \let\arraystretch\oldarraystretch
+}
+
+
+\cs_new_protected:Nn \parse_nicetable_row:n {
+    \seq_set_split:Nnn \l_nicetable_row_seq {&} {#1}
+    % \seq_show:N \l_nicetable_row_seq
+    % \seq_join:Nnn \l_nicetable_row_seq {&} {\l_nicetable_style_tl }
+    \int_set:Nn \l_tmpa_int {\seq_count:N \l_nicetable_row_seq}
+    % set the row_out_seq to be empty
+    \seq_clear:N \l_nicetable_row_out_seq
+    \seq_map_indexed_inline:Nn \l_nicetable_row_seq {
+        %If there are 2 or more styles, we need to cycle through them
+        \int_compare:nNnTF {\g_nicetable_num_styles_int} > {1} {
+            \int_set:Nn \l_tmpb_int {\int_mod:nn {##1 - 1} {\g_nicetable_num_styles_int} + 1}
+            \tl_gset:Nx \l_nicetable_style_tl {\seq_item:Nn \g_nicetable_cell_style_seq {\l_tmpb_int}}
+            % \tl_show:N \l_nicetable_style_tl
+        } {
+        }
+        \seq_put_right:No \l_nicetable_row_out_seq {\l_nicetable_style_tl {##2}}
+    }
+    % apply the every cell style
+    \seq_set_map:NNn \l_nicetable_row_out_seq \l_nicetable_row_out_seq {
+        \l_nicetable_every_cell_style_tl {##1}
+    }
+
+    \seq_join:Nnn \l_nicetable_row_out_seq {&} {}
+}
+
+\cs_new_protected:Nn \parse_nicetable_header_row:n {
+    \seq_set_split:Nnn \l_nicetable_row_seq {&} {#1}
+    % \seq_show:N \l_nicetable_row_seq
+    % \seq_join:Nnn \l_nicetable_row_seq {&} {\l_nicetable_style_tl }
+    \int_set:Nn \l_tmpa_int {\seq_count:N \l_nicetable_row_seq}
+    % set the row_out_seq to be empty
+    \seq_clear:N \l_nicetable_header_row_out_seq
+    \seq_map_indexed_inline:Nn \l_nicetable_row_seq {
+        %If there are 2 or more styles, we need to cycle through them
+        \int_compare:nNnTF {\g_nicetable_num_header_styles_int} > {1} {
+            \int_set:Nn \l_tmpb_int {\int_mod:nn {##1 - 1} {\g_nicetable_num_header_styles_int} + 1}
+            \tl_gset:Nx \l_nicetable_header_style_tl {\seq_item:Nn \g_nicetable_header_style_seq {\l_tmpb_int}}
+            % \tl_show:N \l_nicetable_header_style_tl
+        } {
+        }
+        \seq_put_right:No \l_nicetable_header_row_out_seq {\l_nicetable_header_style_tl {##2}}
+    }
+
+    % apply the every cell style
+    \seq_set_map:NNn \l_nicetable_header_row_out_seq \l_nicetable_header_row_out_seq {
+        \l_nicetable_every_header_cell_style_tl {##1}
+    }
+    
+    % apply the cell colour
+    \seq_set_map:NNn \l_nicetable_header_row_out_seq \l_nicetable_header_row_out_seq {
+        \cellcolor{\l_nicetable_header_row_color_tl} ##1
+    }
+
+    \seq_join:Nnn \l_nicetable_header_row_out_seq {&} {}
+}
+
+
+
+\ExplSyntaxOff

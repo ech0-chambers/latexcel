@@ -1,0 +1,20 @@
+% Declare a new SI unit for year
+\DeclareSIUnit{\year}{yr}
+
+\newcommand{\formatAge}[1]{
+    \SI{#1}{\year}
+}
+
+\begin{latexcel}[
+    header cell style   = \textbf,
+    every cell style    = \color{blue},
+    cell style          = {{}, {\formatAge}, \ttfamily},
+]
+    Name            & Age   & City          \\
+%  |----------------|-------|-----------------|
+    John Smith      & 28    & New York      \\
+    Alice Johnson   & 35    & Los Angeles   \\
+    Bob Anderson    & 22    & Chicago       \\
+    Eva Williams    & 30    & San Francisco \\
+    David Brown     & 25    & Miami          
+\end{latexcel}

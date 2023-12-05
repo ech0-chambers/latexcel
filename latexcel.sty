@@ -1,0 +1,629 @@
+\ProvidesPackage{latexcel}[2023/12/04 v1.0 Excel and Google Sheets style rendering for LaTeX]
+
+
+\newcommand*\makealph[1]{\symbol{\numexpr96+#1}}
+\newcommand*\makeAlph[1]{\symbol{\numexpr64+#1}}
+
+
+\RequirePackage{tikz}
+
+
+\usetikzlibrary{calc, positioning}
+\RequirePackage{xcolor}
+
+%
+\definecolor{gridlinecolor}{HTML}{dfdfdf}%
+\definecolor{cornercolor}{HTML}{F8F9FA}%
+\definecolor{cornerbordercolor}{HTML}{C7C7C7}%
+\definecolor{labelbordercolor}{HTML}{C4C7C5}%
+\definecolor{labeltextcolor}{HTML}{444746}%
+\definecolor{selectedbordercolor}{HTML}{0A57D0}%
+\definecolor{selectedcelldotcolor}{HTML}{0A57D0}%
+\definecolor{formulabarbordercolor}{HTML}{F9FBFD}%
+\definecolor{selectedcelldropdowncolor}{HTML}{444746}%
+\definecolor{fxcolor}{HTML}{A5A7A6}%
+\definecolor{selectedcolumncolor}{HTML}{D3E3FD}%
+
+\RequirePackage{environ}
+
+\newcommand{\fillcell}[3]{
+    % fill a cell with a color
+    \begin{pgfonlayer}{cells}
+        \setint{\nextcellx}{#1-1}
+        \setint{\nextcelly}{#2-1}
+        \fill[#3] (corner_\nextcellx_\nextcelly) rectangle (corner_#1_#2);
+    \end{pgfonlayer}
+}
+
+\newcommand{\cellcontents}[4][]{
+    % write contents to a cell
+    \node[#1] at (cell_#2_#3) {#4};
+}
+
+\ExplSyntaxOn
+
+\newcommand\setint[2]{
+    \def#1{\fp_to_int:n{#2}}
+}
+
+\newcommand\round[2][0]{
+    \fp_eval:n{round(#2,#1)}
+}
+
+\keys_define:nn {latexcel} {
+    row~height .fp_set:N = \l_latexcel_row_height_fp,
+    row~height .initial:n = 1,
+    padding~rows .int_set:N = \l_latexcel_padding_rows_int,
+    padding~rows .initial:n = 1,
+    padding~row~height .fp_set:N = \l_latexcel_padding_row_height_fp,
+    padding~row~height .initial:n = 0.65,
+    starting~row .int_set:N = \l_latexcel_starting_row_int,
+    starting~row .initial:n = 2,
+    column~width .fp_set:N = \l_latexcel_column_width_fp,
+    column~width .initial:n = 4,
+    padding~columns .int_set:N = \l_latexcel_padding_columns_int,
+    padding~columns .initial:n = 1,
+    padding~column~width .fp_set:N = \l_latexcel_padding_column_width_fp,
+    padding~column~width .initial:n = 0.65,
+    starting~column .int_set:N = \l_latexcel_starting_column_int,
+    starting~column .initial:n = 2,
+    header~row~color .tl_set:N = \l_latexcel_header_row_color_tl,
+    header~row~color .initial:n = {white},
+    header~cell~style .tl_set:N = \l_latexcel_header_cell_styles_tl,
+    header~cell~style .initial:n = {},
+    every~header~cell~style .tl_set:N = \l_latexcel_every_header_cell_style_tl,
+    every~header~cell~style .initial:n = {},
+    even~row~color .tl_set:N = \l_latexcel_even_row_color_tl,
+    even~row~color .initial:n = {white},
+    odd~row~color .tl_set:N = \l_latexcel_odd_row_color_tl,
+    odd~row~color .initial:n = {white},
+    cell~style .tl_set:N = \l_latexcel_cell_styles_tl,
+    cell~style .initial:n = {},
+    every~cell~style .tl_set:N = \l_latexcel_every_cell_style_tl,
+    every~cell~style .initial:n = {},
+    borders .bool_set:N = \l_latexcel_border_bool,
+    borders .initial:n = true,
+    borders .default:n = true,
+    border~style .tl_set:N = \l_latexcel_border_style_tl,
+    border~style .initial:n = {black},
+    border~width .dim_set:N = \l_latexcel_border_width_dim,
+    border~width .initial:n = 0.75pt,
+    row~borders .bool_set:N = \l_latexcel_row_borders_bool,
+    row~borders .initial:n = false,
+    row~borders .default:n = true,
+    column~borders .bool_set:N = \l_latexcel_column_borders_bool,
+    column~borders .initial:n = true,
+    column~borders .default:n = true,
+    selected~cell .tl_set:N = \l_latexcel_selected_cell_tl,
+    selected~cell .initial:n = {},
+    formula .tl_set:N = \l_latexcel_formula_tl,
+    formula .initial:n = {},
+    show~formula~bar .bool_set:N = \l_latexcel_show_formula_bar_bool,
+    show~formula~bar .initial:n = true,
+    scale .fp_set:N = \l_latexcel_scale_fp,
+    scale .initial:n = 1,
+}
+
+\newcommand{\latexcelset}[1]{
+    \keys_set:nn {latexcel} {#1}
+}
+
+\seq_new:N \l_latexcel_rows_seq
+\seq_new:N \l_latexcel_cells_seq
+
+\seq_new:N \g_latexcel_cell_styles_seq
+\int_new:N \g_latexcel_num_styles_int
+\seq_new:N \g_latexcel_header_styles_seq
+\int_new:N \g_latexcel_num_header_styles_int
+\tl_new:N  \l_latexcel_cell_style_tl
+
+\int_new:N \l_latexcel_num_columns_int
+\int_new:N \l_latexcel_num_rows_int
+
+\seq_new:N \l_latexcel_header_row_seq
+
+\NewEnviron{latexcel}[1][]{
+    \group_begin:
+        \pgfdeclarelayer{gridlines}
+        \pgfdeclarelayer{borders}
+        \pgfdeclarelayer{cells}
+
+        \pgfsetlayers{cells, main, gridlines, borders}
+        \keys_set:nn {latexcel} {#1}
+        \seq_set_split:NnV \l_latexcel_rows_seq {\\} {\BODY}
+        \int_set:Nn \l_latexcel_num_rows_int {\seq_count:N \l_latexcel_rows_seq}
+        \seq_get_left:NN \l_latexcel_rows_seq \l_tmpa_tl
+        \seq_set_split:NnV \l_tmpb_seq {&} {\l_tmpa_tl}
+        \int_set:Nn \l_latexcel_num_columns_int {\seq_count:N \l_tmpb_seq}
+
+        % Prepare the cell styles, which may be different for each column
+        \seq_set_split:NnV \l_tmpa_seq {,} {\l_latexcel_cell_styles_tl}
+        \int_gset:Nn \g_latexcel_num_styles_int {\seq_count:N \l_tmpa_seq}
+        % Set the sequence to the styles in order, repeating if necessary
+        \seq_gclear:N \g_latexcel_cell_styles_seq
+        \int_step_inline:nnn {1} {\l_latexcel_num_columns_int} {
+            \int_set:Nn \l_tmpa_int {\int_mod:nn {##1-1} {\g_latexcel_num_styles_int}+1}
+            \seq_gput_right:Nx \g_latexcel_cell_styles_seq {\seq_item:Nn \l_tmpa_seq {\l_tmpa_int}}
+        }
+
+        % Do the same for the header row
+        \seq_set_split:NnV \l_tmpa_seq {,} {\l_latexcel_header_cell_styles_tl}
+        \int_gset:Nn \g_latexcel_num_header_styles_int {\seq_count:N \l_tmpa_seq}
+        % Set the sequence to the styles in order, repeating if necessary
+        \seq_gclear:N \g_latexcel_header_styles_seq
+        \int_step_inline:nnn {1} {\l_latexcel_num_columns_int} {
+            \int_set:Nn \l_tmpa_int {\int_mod:nn {##1-1} {\g_latexcel_num_header_styles_int}+1}
+            \seq_gput_right:Nx \g_latexcel_header_styles_seq {\seq_item:Nn \l_tmpa_seq {\l_tmpa_int}}
+        }
+        
+        \pgfmathsetmacro{\latexcel@numrows}{\fp_to_int:n{\l_latexcel_num_rows_int}}
+        \pgfmathsetmacro{\latexcel@numcolumns}{\fp_to_int:n{\l_latexcel_num_columns_int}}
+        \pgfmathsetmacro{\latexcel@cellwidth}{\fp_to_decimal:n{\l_latexcel_column_width_fp}}%
+        \pgfmathsetmacro{\latexcel@cellheight}{\fp_to_decimal:n{\l_latexcel_row_height_fp}}%
+        \pgfmathsetmacro{\latexcel@columnlabelheight}{0.55}%
+        \pgfmathsetmacro{\latexcel@rowlabelwidth}{1.2}%
+        \pgfmathsetmacro{\latexcel@paddingrowheight}{\fp_to_decimal:n{\l_latexcel_padding_row_height_fp}}%
+        \pgfmathsetmacro{\latexcel@paddingrows}{\int_use:N \l_latexcel_padding_rows_int}%
+        \pgfmathsetmacro{\latexcel@paddingcolumnwidth}{\fp_to_decimal:n{\l_latexcel_padding_column_width_fp}}%
+        \pgfmathsetmacro{\latexcel@paddingcolumns}{\int_use:N \l_latexcel_padding_columns_int}%
+        \pgfmathsetmacro{\latexcel@startingcolumn}{\l_latexcel_starting_column_int}%
+        \pgfmathsetmacro{\latexcel@startingrow}{\int_use:N \l_latexcel_starting_row_int}%
+        \pgfmathsetmacro{\latexcel@formulabarheight}{0.75}%
+        \pgfmathsetmacro{\latexcel@selectedcellwidth}{2.75}%
+        \setint{\latexcel@firstpaddingrow}{\latexcel@numrows+1}%
+        \setint{\latexcel@lastpaddingrow}{\latexcel@numrows+\latexcel@paddingrows}%
+        \setint{\latexcel@firstpaddingcolumn}{\latexcel@numcolumns+1}%
+        \setint{\latexcel@lastpaddingcolumn}{\latexcel@numcolumns+\latexcel@paddingcolumns}%
+        \setint{\latexcel@columnlabelrow}{-\latexcel@paddingrows-1}%
+        \setint{\latexcel@rowlabelcolumn}{-\latexcel@paddingcolumns-1}%
+        \setint\latexcel@firstcolumnlabel{-\latexcel@paddingcolumns+1}%
+        \setint\latexcel@firstrowlabel{-\latexcel@paddingrows+1}%
+        %
+        \scalebox{\fp_to_decimal:n \l_latexcel_scale_fp}{
+            \begin{tikzpicture}[
+                gridline/.style = {
+                    draw = gridlinecolor,
+                    line~width = 0.5pt
+                },
+                corner~border/.style = {
+                    draw = cornerbordercolor,
+                    line~width = 1mm
+                },
+                label~border/.style = {
+                    draw = labelbordercolor,
+                    % draw = red,
+                    line~width = 0.75pt
+                },
+                border/.estyle = {
+                    line~width = \l_latexcel_border_width_dim,
+                    black,
+                    \l_latexcel_border_style_tl
+                }
+            ]
+                \createcoordinates
+                \addlabels
+                \addgridlines
+                \bool_if:NTF \l_latexcel_border_bool {
+                    \addborders
+                    \bool_if:NTF \l_latexcel_row_borders_bool {
+                        \addrowborders
+                    } {}
+                    \bool_if:NTF \l_latexcel_column_borders_bool {
+                        \addcolumnborders
+                    } {}
+                }{}
+                \colorcells
+                \seq_pop_left:NN \l_latexcel_rows_seq \l_tmpa_tl
+                \seq_set_split:NnV \l_latexcel_header_row_seq {&} {\l_tmpa_tl}
+                % \latexcel_process_header_row:nn {\l_latexcel_header_cell_style_tl} {\l_tmpa_tl}
+                \latexcel_process_header_row:n {\l_tmpa_tl}
+                \seq_map_indexed_inline:Nn \l_latexcel_rows_seq {
+                    % \latexcel_process_row:nnn {##1} {##2} {\l_latexcel_cell_style_tl}
+                    \latexcel_process_row:nn {##1} {##2}
+                }
+                % if the selected cell tl is empty, then don't do anything
+                \tl_if_empty:NTF \l_latexcel_selected_cell_tl {
+                    % if show formula bar:
+                    \bool_if:NTF \l_latexcel_show_formula_bar_bool {
+                        \addformulabar{1}{1}{\l_latexcel_formula_tl}
+                        \addformula{\l_latexcel_formula_tl}
+                    } {
+                    }
+                } {
+                    \seq_set_split:NnV \l_tmpa_seq {,} {\l_latexcel_selected_cell_tl}
+                    \setint{\selectedcellx}{\seq_item:Nn \l_tmpa_seq {1}}
+                    \setint{\selectedcelly}{\seq_item:Nn \l_tmpa_seq {2}}
+                    \selectedcell{\selectedcellx}{\selectedcelly}
+                    % if show formula bar:
+                    \bool_if:NTF \l_latexcel_show_formula_bar_bool {
+                        \addformulabar{\selectedcellx}{\selectedcelly}{\l_latexcel_formula_tl}
+                        \addformula{\l_latexcel_formula_tl}
+                    } {
+                    }
+                }
+            \end{tikzpicture}
+        }
+    \group_end:
+}
+
+\seq_new:N \l_latexcel_header_row_out_seq
+\seq_new:N \l_latexcel_row_out_seq
+
+\cs_new_protected:Nn \latexcel_process_header_row:n {
+    \seq_set_split:NnV \l_latexcel_cells_seq {&} {#1}
+    \int_set:Nn \l_tmpa_int {\seq_count:N \l_latexcel_cells_seq}
+    \seq_clear:N \l_latexcel_row_out_seq
+    % map over the cells and the cell styles together, and add the style to the cell
+    \seq_map_indexed_inline:Nn \l_latexcel_cells_seq {
+        \tl_set:Nx \l_tmpa_tl {\seq_item:Nn \g_latexcel_header_styles_seq {##1}}
+        \seq_put_right:No \l_latexcel_header_row_out_seq {\l_tmpa_tl {##2}}
+    }
+
+    \seq_set_map:NNn \l_latexcel_header_row_out_seq \l_latexcel_header_row_out_seq {
+        \l_latexcel_every_header_cell_style_tl {##1}
+    }
+
+    \seq_map_indexed_inline:Nn \l_latexcel_header_row_out_seq {
+        \cellcontents{##1}{1}{##2}
+    }
+
+}
+
+
+\cs_new_protected:Nn \latexcel_process_row:nn {
+    % #1 row number
+    % #2 row contents
+
+    \seq_set_split:Nnn \l_latexcel_cells_seq {&} {#2}
+    \int_set:Nn \l_tmpa_int {\seq_count:N \l_latexcel_cells_seq}
+    \seq_clear:N \l_latexcel_row_out_seq
+    % map over the cells and the cell styles together, and add the style to the cell
+    \seq_map_indexed_inline:Nn \l_latexcel_cells_seq {
+        \tl_set:Nx \l_tmpa_tl {\seq_item:Nn \g_latexcel_cell_styles_seq {##1}}
+        \seq_put_right:No \l_latexcel_row_out_seq {\l_tmpa_tl {##2}}
+    }
+
+    \seq_set_map:NNn \l_latexcel_row_out_seq \l_latexcel_row_out_seq {
+        \l_latexcel_every_cell_style_tl {##1}
+    }
+
+
+    \seq_map_indexed_inline:Nn \l_latexcel_row_out_seq {
+        \cellcontents{##1}{\fp_to_int:n{#1+1}}{##2}
+    }
+}
+
+\ExplSyntaxOff
+
+\newcommand\createcoordinates{
+    \begin{scope}[yscale = -1]
+        % main table ================================================================================================
+        \foreach \x in {1,...,\latexcel@numcolumns} {
+            \foreach \y in {1,...,\latexcel@numrows} {
+                \coordinate (cell_\x_\y) at ({(\x-0.5)*\latexcel@cellwidth},{(\y-0.5)*\latexcel@cellheight});
+            }
+        }
+        \foreach \x in {0, ..., \latexcel@numcolumns} {
+            \foreach \y in {0, ..., \latexcel@numrows} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@cellwidth},{\y*\latexcel@cellheight});
+            }
+        }
+        % main table ================================================================================================
+        %
+        % padding ===================================================================================================
+        % padding rows and columns (extra rows and columns before and after the main table)
+        \foreach \x in {-\latexcel@paddingcolumns,...,-1} {
+            \foreach \y in {0,...,\latexcel@numrows} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@paddingcolumnwidth},{\y*\latexcel@cellheight});
+            }
+        }
+        \foreach \x in {\latexcel@firstpaddingcolumn,...,\latexcel@lastpaddingcolumn} {
+            \foreach \y in {0,...,\latexcel@numrows} {
+                \coordinate (corner_\x_\y) at ({((\x-\latexcel@numcolumns)*\latexcel@paddingcolumnwidth + \latexcel@numcolumns * \latexcel@cellwidth)*1cm},{\y*\latexcel@cellheight});
+            }
+        }
+        % padding columns
+        \foreach \x in {0,...,\latexcel@numcolumns} {
+            \foreach \y in {-\latexcel@paddingrows,...,-1} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@cellwidth},{\y*\latexcel@paddingrowheight});
+            }
+        }
+        \foreach \x in {0,...,\latexcel@numcolumns} {
+            \foreach \y in {\latexcel@firstpaddingrow,...,\latexcel@lastpaddingrow} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@cellwidth},{((\y-\latexcel@numrows)*\latexcel@paddingrowheight + \latexcel@numrows * \latexcel@cellheight)*1cm});
+            }
+        }
+        % padding ===================================================================================================
+        %
+        % missing corners ===========================================================================================
+        % top left
+        \foreach \x in {-\latexcel@paddingcolumns,...,-1} {
+            \foreach \y in {-\latexcel@paddingrows,...,-1} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@paddingcolumnwidth},{\y*\latexcel@paddingrowheight});
+            }
+        }
+        % top right
+        \foreach \x in {\latexcel@firstpaddingcolumn,...,\latexcel@lastpaddingcolumn} {
+            \foreach \y in {-\latexcel@paddingrows,...,-1} {
+                \coordinate (corner_\x_\y) at ({((\x-\latexcel@numcolumns)*\latexcel@paddingcolumnwidth + \latexcel@numcolumns * \latexcel@cellwidth)*1cm},{\y*\latexcel@paddingrowheight});
+            }
+        }
+        % bottom left
+        \foreach \x in {-\latexcel@paddingcolumns,...,-1} {
+            \foreach \y in {\latexcel@firstpaddingrow,...,\latexcel@lastpaddingrow} {
+                \coordinate (corner_\x_\y) at ({\x*\latexcel@paddingcolumnwidth},{((\y-\latexcel@numrows)*\latexcel@paddingrowheight + \latexcel@numrows * \latexcel@cellheight)*1cm});
+            }
+        }
+        % bottom right
+        \foreach \x in {\latexcel@firstpaddingcolumn,...,\latexcel@lastpaddingcolumn} {
+            \foreach \y in {\latexcel@firstpaddingrow,...,\latexcel@lastpaddingrow} {
+                \coordinate (corner_\x_\y) at ({((\x-\latexcel@numcolumns)*\latexcel@paddingcolumnwidth + \latexcel@numcolumns * \latexcel@cellwidth)*1cm},{((\y-\latexcel@numrows)*\latexcel@paddingrowheight + \latexcel@numrows * \latexcel@cellheight)*1cm});
+            }
+        }
+        % missing corners ============================================================================================
+        %
+        % labels =====================================================================================================
+        % Columns
+        \foreach \x in {-\latexcel@paddingcolumns,...,-1} {
+            \coordinate (corner_\x_\latexcel@columnlabelrow) at ({\x*\latexcel@paddingcolumnwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight});
+        }
+        \foreach \x in {0,..., \latexcel@numcolumns} {
+            \coordinate (corner_\x_\latexcel@columnlabelrow) at ({\x*\latexcel@cellwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight});
+        }
+        \foreach \x in {\latexcel@firstpaddingcolumn,...,\latexcel@lastpaddingcolumn} {
+            \coordinate (corner_\x_\latexcel@columnlabelrow) at ({((\x-\latexcel@numcolumns)*\latexcel@paddingcolumnwidth + \latexcel@numcolumns * \latexcel@cellwidth)*1cm},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight});
+        }
+        \foreach \x in {\latexcel@firstcolumnlabel,...,0} {
+            \coordinate (cell_\x_\latexcel@columnlabelrow) at ({(\x-0.5)*\latexcel@paddingcolumnwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight/2});
+        }
+        \foreach \x in {1,..., \latexcel@numcolumns} {
+            \coordinate (cell_\x_\latexcel@columnlabelrow) at ({(\x-0.5)*\latexcel@cellwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight/2});
+        }
+        \foreach \x in {\latexcel@firstpaddingcolumn,...,\latexcel@lastpaddingcolumn} {
+            \coordinate (cell_\x_\latexcel@columnlabelrow) at ({((\x-\latexcel@numcolumns-0.5) * \latexcel@paddingcolumnwidth) + \latexcel@numcolumns * \latexcel@cellwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight/2});
+        }
+        % Rows
+        \foreach \y in {-\latexcel@paddingrows,...,-1} {
+            \coordinate (corner_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth},{\y*\latexcel@paddingrowheight});
+        }
+        \foreach \y in {0,..., \latexcel@numrows} {
+            \coordinate (corner_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth},{\y*\latexcel@cellheight});
+        }
+        \foreach \y in {\latexcel@firstpaddingrow,...,\latexcel@lastpaddingrow} {
+            \coordinate (corner_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth},{((\y-\latexcel@numrows)*\latexcel@paddingrowheight + \latexcel@numrows * \latexcel@cellheight)*1cm});
+        }
+        \foreach \y in {\latexcel@firstrowlabel,...,0} {
+            \coordinate (cell_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth/2},{(\y-0.5)*\latexcel@paddingrowheight});
+        }
+        \foreach \y in {1,..., \latexcel@numrows} {
+            \coordinate (cell_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth/2},{(\y-0.5)*\latexcel@cellheight});
+        }
+        \foreach \y in {\latexcel@firstpaddingrow,...,\latexcel@lastpaddingrow} {
+            \coordinate (cell_\latexcel@rowlabelcolumn_\y) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth/2},{((\y-\latexcel@numrows-0.5) * \latexcel@paddingrowheight) + \latexcel@numrows * \latexcel@cellheight});
+        }
+        % Missing corner
+        \coordinate (corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) at ({-\latexcel@paddingcolumns*\latexcel@paddingcolumnwidth - \latexcel@rowlabelwidth},{-\latexcel@paddingrows*\latexcel@paddingrowheight - \latexcel@columnlabelheight});
+        % labels =====================================================================================================
+    \end{scope} 
+}
+
+\newcommand{\addlabels}{
+    \foreach \x in {\latexcel@firstcolumnlabel, ..., \latexcel@lastpaddingcolumn} {
+        \cellcontents{\x}{\latexcel@columnlabelrow}{\footnotesize\color{labeltextcolor}\makeAlph{\x+\latexcel@startingcolumn-1}}
+    }
+    \foreach \y in {\latexcel@firstrowlabel, ..., \latexcel@lastpaddingrow} {
+        \setint\rowlabel{\y+\latexcel@startingrow-1}
+        \cellcontents{\latexcel@rowlabelcolumn}{\y}{\footnotesize\color{labeltextcolor}\rowlabel}
+    }
+}
+
+\newcommand{\addgridlines}{
+    \begin{pgfonlayer}{gridlines}
+        \foreach \x in {-\latexcel@paddingcolumns,...,\latexcel@lastpaddingcolumn} {
+            \draw[gridline] (corner_\x_-\latexcel@paddingrows) -- (corner_\x_\latexcel@lastpaddingrow);
+        }
+        \foreach \y in {-\latexcel@paddingrows,...,\latexcel@lastpaddingrow} {
+            \draw[gridline] (corner_-\latexcel@paddingcolumns_\y) -- (corner_\latexcel@lastpaddingcolumn_\y);
+        }
+        \foreach \x in {-\latexcel@paddingcolumns,...,\latexcel@lastpaddingcolumn} {
+            \draw[label border] (corner_\x_\latexcel@columnlabelrow) -- (corner_\x_-\latexcel@paddingrows);
+        }
+        \foreach \y in {-\latexcel@paddingrows,...,\latexcel@lastpaddingrow} {
+            \draw[label border] (corner_\latexcel@rowlabelcolumn_\y) -- (corner_-\latexcel@paddingcolumns_\y);
+        }
+        \draw[label border] (corner_-\latexcel@paddingcolumns_\latexcel@columnlabelrow) -- (corner_\latexcel@lastpaddingcolumn_\latexcel@columnlabelrow);
+        \draw[label border] (corner_\latexcel@rowlabelcolumn_-\latexcel@paddingrows) -- (corner_\latexcel@rowlabelcolumn_\latexcel@lastpaddingrow);
+        \draw[label border] (corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) -- (corner_\latexcel@rowlabelcolumn_-\latexcel@paddingrows);
+        \draw[label border] (corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) -- (corner_-\latexcel@paddingcolumns_\latexcel@columnlabelrow);
+        \draw[label border] (corner_-\latexcel@paddingcolumns_\latexcel@columnlabelrow) -- (corner_-\latexcel@paddingcolumns_\latexcel@lastpaddingrow);
+        \draw[label border] (corner_\latexcel@rowlabelcolumn_-\latexcel@paddingrows) -- (corner_\latexcel@lastpaddingcolumn_-\latexcel@paddingrows);
+        \draw[corner border] (corner_-\latexcel@paddingcolumns_\latexcel@columnlabelrow) -- (corner_-\latexcel@paddingcolumns_-\latexcel@paddingrows) -- (corner_\latexcel@rowlabelcolumn_-\latexcel@paddingrows);
+    \end{pgfonlayer}
+}
+
+\newcommand{\addborders}{
+    \begin{pgfonlayer}{borders}
+        \draw[border] (corner_0_0) rectangle (corner_\latexcel@numcolumns_\latexcel@numrows);
+        % \foreach \x in {1,...,\latexcel@numcolumns} {
+        %     \draw[border] (corner_\x_0) -- (corner_\x_\latexcel@numrows);
+        % }
+        \draw[border] (corner_0_1) -- (corner_\latexcel@numcolumns_1);
+    \end{pgfonlayer}
+}
+
+\newcommand{\addrowborders}{
+    \begin{pgfonlayer}{borders}
+        \foreach \y in {1,...,\latexcel@numrows} {
+            \draw[border] (corner_0_\y) -- (corner_\latexcel@numcolumns_\y);
+        }
+    \end{pgfonlayer}
+}
+
+\newcommand{\addcolumnborders}{
+    \begin{pgfonlayer}{borders}
+        \foreach \x in {1,...,\latexcel@numcolumns} {
+            \draw[border] (corner_\x_0) -- (corner_\x_\latexcel@numrows);
+        }
+    \end{pgfonlayer}
+}
+
+\ExplSyntaxOn
+\newcommand{\colorcells}{
+    \begin{pgfonlayer}{cells}
+        \foreach \x in {1,...,\latexcel@numcolumns} {
+            \fillcell{\x}{1}{\tl_use:N \l_latexcel_header_row_color_tl}
+        }
+        \ifdim \latexcel@numrows pt < 2pt%
+            % There is no even row to colour
+        \else%
+            \ifdim \latexcel@numrows pt < 4pt%
+                % there is only one even row to colour. Do it manually
+                \foreach \x in {1,...,\latexcel@numcolumns} {
+                    \fillcell{\x}{2}{\tl_use:N \l_latexcel_even_row_color_tl}
+                }
+            \else%
+                \foreach \y in {2,4,...,\latexcel@numrows} {
+                    \foreach \x in {1,...,\latexcel@numcolumns} {
+                        \fillcell{\x}{\y}{\tl_use:N \l_latexcel_even_row_color_tl}
+                    }
+                }
+            \fi
+        \fi
+        \ifdim \latexcel@numrows pt < 3pt%
+            % There is no odd row to colour
+        \else%
+            \ifdim \latexcel@numrows pt < 5pt%
+                % there is only one odd row to colour. Do it manually
+                \foreach \x in {1,...,\latexcel@numcolumns} {
+                    \fillcell{\x}{3}{\tl_use:N \l_latexcel_odd_row_color_tl}
+                }
+            \else%
+                \foreach \y in {3,5,...,\latexcel@numrows} {
+                    \foreach \x in {1,...,\latexcel@numcolumns} {
+                        \fillcell{\x}{\y}{\tl_use:N \l_latexcel_odd_row_color_tl}
+                    }
+                }
+            \fi
+        \fi
+        \fillcell{-\latexcel@paddingcolumns}{-\latexcel@paddingrows}{gray!10!white}
+    \end{pgfonlayer}
+}
+
+
+% \node[right, anchor = base west] at ($(formula divider) + (0.75, -0.5ex)$) {\texttt{=#3}};
+
+% \tl_new:N \l_latexcel_cell_contents_temp_tl
+
+\newcommand{\addformula}[1]{
+    % if the formula is empty, do nothing
+    \exp_args:No \tl_if_blank:nTF {#1} {
+        % if there is a selected cell, get the cell contents and use that instead
+        \tl_if_empty:NTF \l_latexcel_selected_cell_tl {
+            % if there is no selected cell, do nothing
+        } {
+            \seq_set_split:NnV \l_tmpa_seq {,} {\l_latexcel_selected_cell_tl}
+            \setint{\selectedcellx}{\seq_item:Nn \l_tmpa_seq {1}}
+            \setint{\selectedcelly}{\seq_item:Nn \l_tmpa_seq {2}}
+            \latexcel_get_cell_contents:nnn {\selectedcellx} {\selectedcelly} \l_tmpa_tl
+            \node[right, anchor = base~west] at ($(formula~divider) + (0.75, -0.5ex)$) {\texttt{\l_tmpa_tl}};
+        }
+    }{
+        \node[right, anchor = base~west] at ($(formula~divider) + (0.75, -0.5ex)$) {\texttt{=~#1}};
+    }
+}
+
+
+\int_new:N \l_latexcel_get_cell_contents_x_int
+\int_new:N \l_latexcel_get_cell_contents_y_int
+\cs_new_protected:Nn \latexcel_get_cell_contents:nnn {
+    % #1 - x
+    % #2 - y
+    % #3 - tl variable to store contents in
+    \int_set:Nn \l_latexcel_get_cell_contents_x_int {#1}
+    \int_set:Nn \l_latexcel_get_cell_contents_y_int {#2}
+    % if the x or y component is less than 1, return an empty string
+    \int_compare:nNnTF {\l_latexcel_get_cell_contents_x_int} < {1} {
+        \tl_set:Nn #3 {}
+    } {
+        \int_compare:nNnTF {\l_latexcel_get_cell_contents_y_int} < {1} {
+            \tl_set:Nn #3 {}
+        } {
+            % if the x or y component is greater than the number of columns or rows, return an empty string
+            \int_compare:nNnTF {\l_latexcel_get_cell_contents_x_int} > {\latexcel@numcolumns} {
+                \tl_set:Nn #3 {}
+            } {
+                \int_compare:nNnTF {\l_latexcel_get_cell_contents_y_int} > {\latexcel@numrows} {
+                    \tl_set:Nn #3 {}
+                } {
+                    % otherwise, get the contents of the cell
+                    % if y is 1, this is a header cell. Get the header row
+                    \int_compare:nNnTF {\l_latexcel_get_cell_contents_y_int} = {1} {
+                        \tl_set:Nx #3 {\seq_item:Nn \l_latexcel_header_row_seq {\l_latexcel_get_cell_contents_x_int}}
+                    } {
+                        % otherwise, get the row
+                        % first, take 1 from y to account for the header row
+                        \int_set:Nn \l_latexcel_get_cell_contents_y_int {\l_latexcel_get_cell_contents_y_int-1}
+                        \tl_set:Nx #3 {\seq_item:cn {l_latexcel_rows_seq} {\l_latexcel_get_cell_contents_y_int}}
+                        \seq_set_split:NnV \l_tmpa_seq {&} {#3}
+                        \tl_set:Nx #3 {\seq_item:Nn \l_tmpa_seq {\l_latexcel_get_cell_contents_x_int}}
+                    }
+                }
+            }
+        }
+    }
+}
+
+\ExplSyntaxOff
+
+\newcommand{\selectedcell}[2]{
+    \begin{pgfonlayer}{borders}
+        \setint\selectedcellnextx{#1-1}
+        \setint\selectedcellnexty{#2-1}
+        \draw[selectedbordercolor, line width = 0.5mm] ($(corner_\selectedcellnextx_\selectedcellnexty)+(0.25mm, -0.25mm)$) rectangle ($(corner_#1_#2)+(-0.25mm, +0.25mm)$);
+        \fill[selectedcelldotcolor, draw = white, thick] (corner_#1_#2) circle (1.25mm);
+    \end{pgfonlayer}
+    \begin{pgfonlayer}{cells}
+        \fillcell{#1}{-\latexcel@paddingrows}{selectedcolumncolor}
+        \fillcell{-\latexcel@paddingcolumns}{#2}{selectedcolumncolor}
+    \end{pgfonlayer}
+    \cellcontents{#1}{\latexcel@columnlabelrow}{\footnotesize\color{labeltextcolor}\bfseries\makeAlph{#1+\latexcel@startingcolumn-1}}
+    \setint\rownumber{#2+\latexcel@startingrow-1}
+    \cellcontents{\latexcel@rowlabelcolumn}{#2}{\footnotesize\color{labeltextcolor}\bfseries\rownumber}
+}
+
+\newcommand{\addformulabar}[3]{
+    % #1 - selected cell x
+    % #2 - selected cell y
+    % #3 - formula
+    \draw[formulabarbordercolor, line width = 1mm] ($(corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) + (0, \latexcel@formulabarheight * 1cm)$) -- ($(corner_\latexcel@lastpaddingcolumn_\latexcel@columnlabelrow) + (0, \latexcel@formulabarheight * 1cm)$);
+    \setint\rownumber{#2+\latexcel@startingrow-1}
+    \node[] at ($(corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow)!0.5!(corner_-\latexcel@paddingcolumns_\latexcel@columnlabelrow) + (0, \latexcel@formulabarheight/2 * 1cm)$) {\makeAlph{#1+\latexcel@startingcolumn-1}\rownumber};
+    \draw[label border] ($(corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) + (\latexcel@selectedcellwidth, \latexcel@formulabarheight/2)$) coordinate (formula divider) ++ (0, 0.3*\latexcel@formulabarheight) -- ++ (0, -0.6 * \latexcel@formulabarheight);
+    \fill[selectedcelldropdowncolor] ($(corner_\latexcel@rowlabelcolumn_\latexcel@columnlabelrow) + (\latexcel@selectedcellwidth, \latexcel@formulabarheight/2)$) ++ (-0.5, 0.5mm) -- ++ (1.1mm, 0) -- ++ (-1.1mm, -1.1mm) -- ++ (-1.1mm, 1.1mm) -- cycle;
+    % got to fake bold for texttt
+    \foreach \xshift in {-1, 0, 1} {
+        \foreach \yshift in {-1, 0, 1} {
+            \node[fxcolor] at ($(formula divider) + (0.5, 0) + (\xshift * 0.15pt, \yshift * 0.15pt)$) {\texttt{\textit{\fontfamily{cmr}\selectfont f}}\hspace{-0.5ex}\texttt{\fontfamily{cmr}\selectfont x}};
+        }
+    }
+}
+
+\definecolor{SheetsOrange}{HTML}{F7981E}
+\definecolor{SheetsPurple}{HTML}{7E3794}
+\definecolor{SheetsCyan}{HTML}{10A9CC}
+\definecolor{SheetsMaroon}{HTML}{A61D4C}
+\definecolor{SheetsBlue}{HTML}{4285F4}
+\definecolor{SheetsYellow}{HTML}{F4B409}
+\definecolor{SheetsGreen}{HTML}{65B045}
+\definecolor{SheetsBrown}{HTML}{795548}
+
+\colorlet{Sheets1}{SheetsOrange}
+\colorlet{Sheets2}{SheetsPurple}
+\colorlet{Sheets3}{SheetsCyan}
+\colorlet{Sheets4}{SheetsMaroon}
+\colorlet{Sheets5}{SheetsBlue}
+\colorlet{Sheets6}{SheetsYellow}
+\colorlet{Sheets7}{SheetsGreen}
+\colorlet{Sheets8}{SheetsBrown}
+%
+\definecolor{SheetsNumber}{HTML}{1155CC}
