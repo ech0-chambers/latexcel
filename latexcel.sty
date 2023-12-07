@@ -98,6 +98,9 @@
     selected~cell .initial:n = {},
     formula .tl_set:N = \l_latexcel_formula_tl,
     formula .initial:n = {},
+    auto~formula .bool_set:N = \l_latexcel_auto_formula_bool,
+    auto~formula .initial:n = true,
+    auto~formula .default:n = true,
     show~formula~bar .bool_set:N = \l_latexcel_show_formula_bar_bool,
     show~formula~bar .initial:n = true,
     scale .fp_set:N = \l_latexcel_scale_fp,
@@ -121,6 +124,8 @@
 \int_new:N \l_latexcel_num_rows_int
 
 \seq_new:N \l_latexcel_header_row_seq
+
+\bool_new:N \l_latexcel_formula_is_blank_bool
 
 \NewEnviron{latexcel}[1][]{
     \group_begin:
@@ -156,6 +161,12 @@
             \seq_gput_right:Nx \g_latexcel_header_styles_seq {\seq_item:Nn \l_tmpa_seq {\l_tmpa_int}}
         }
         
+        \tl_if_empty:NTF \l_latexcel_formula_tl {
+            \bool_set_true:N \l_latexcel_formula_is_blank_bool
+        } {
+            \bool_set_false:N \l_latexcel_formula_is_blank_bool
+        }
+
         \pgfmathsetmacro{\latexcel@numrows}{\fp_to_int:n{\l_latexcel_num_rows_int}}
         \pgfmathsetmacro{\latexcel@numcolumns}{\fp_to_int:n{\l_latexcel_num_columns_int}}
         \pgfmathsetmacro{\latexcel@cellwidth}{\fp_to_decimal:n{\l_latexcel_column_width_fp}}%
@@ -226,7 +237,11 @@
                     % if show formula bar:
                     \bool_if:NTF \l_latexcel_show_formula_bar_bool {
                         \addformulabar{1}{1}{\l_latexcel_formula_tl}
-                        \addformula{\l_latexcel_formula_tl}
+                        \bool_if:NTF \l_latexcel_auto_formula_bool {
+                            \addformula{\formula{\l_latexcel_formula_tl}}
+                        } {
+                            \addformula{\l_latexcel_formula_tl}
+                        }
                     } {
                     }
                 } {
@@ -237,7 +252,11 @@
                     % if show formula bar:
                     \bool_if:NTF \l_latexcel_show_formula_bar_bool {
                         \addformulabar{\selectedcellx}{\selectedcelly}{\l_latexcel_formula_tl}
-                        \addformula{\l_latexcel_formula_tl}
+                        \bool_if:NTF \l_latexcel_auto_formula_bool {
+                            \addformula{\formula{\l_latexcel_formula_tl}}
+                        } {
+                            \addformula{\l_latexcel_formula_tl}
+                        }
                     } {
                     }
                 }
@@ -516,7 +535,7 @@
 
 \newcommand{\addformula}[1]{
     % if the formula is empty, do nothing
-    \exp_args:No \tl_if_blank:nTF {#1} {
+    \bool_if:NTF \l_latexcel_formula_is_blank_bool {
         % if there is a selected cell, get the cell contents and use that instead
         \tl_if_empty:NTF \l_latexcel_selected_cell_tl {
             % if there is no selected cell, do nothing
@@ -573,6 +592,127 @@
     }
 }
 
+
+\cs_new_protected:Npn \seq_find:NnN #1#2#3
+  {
+    % #1 = sequence
+    % #2 = item to find
+    % #3 = int variable to store index
+
+    % set the index to -1 to indicate not found
+    \int_set:Nn #3 {-1}
+
+    \seq_map_indexed_inline:Nn #1
+      {
+        \str_if_eq:nnT {##2} {#2}
+          {
+            \int_set:Nn #3 {##1}
+            \seq_map_break:
+          }
+      }
+  }
+
+\cs_generate_variant:Nn \regex_split:nnN {nVN}
+\cs_generate_variant:Nn \tl_replace_all:Nnn {NVn}
+
+\seq_new:N \l_latexcel_colours_seq
+\seq_set_from_clist:Nn \l_latexcel_colours_seq {Sheets1, Sheets2, Sheets3, Sheets4, Sheets5, Sheets6, Sheets7, Sheets8}
+
+\int_new:N \l_latexcel_num_colours_int
+\int_set:Nn \l_latexcel_num_colours_int { \seq_count:N \l_latexcel_colours_seq }
+
+
+\tl_new:N \l_latexcel_formula_out_tl
+% ---------------------------------------------
+
+\seq_new:N \l_latexcel_formula_seq
+\seq_new:N \l_latexcel_cell_addresses_seq
+
+\cs_new_protected:Npn \latexcel_color_formula:n #1 {
+    \tl_clear:N \l_latexcel_formula_out_tl
+    \seq_clear:N \l_latexcel_cell_addresses_seq
+    \str_set:Nx \l_tmpa_str {#1}
+
+
+    % Applying colour to TRUE and FALSE. ------------------------------------------------
+    % Without functioning lookahead and lookbehind, numbers can't be reliably matched.
+    % color: SheetsNumber
+
+    \regex_split:nVN {(TRUE|FALSE)} \l_tmpa_str \l_latexcel_formula_seq
+    
+    \seq_map_indexed_inline:Nn \l_latexcel_formula_seq
+    {
+        \int_compare:nNnTF { \int_mod:nn {##1} {2} } = {0}
+        {
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{SheetsNumber}{##2}}
+        }{
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {##2}
+        }
+    }
+
+    % -------------------------------------------------------------------------------------------
+
+    % Applying colour to strings. ------------------------------------------------
+    % color: SheetsString
+    % simple regex to match strings. Doesn't handle escaped quotes.
+
+    \regex_split:nVN {("[^"]*?")} \l_latexcel_formula_out_tl \l_latexcel_formula_seq
+    % \seq_show:N \l_latexcel_formula_seq
+    \tl_clear:N \l_latexcel_formula_out_tl
+
+    \seq_map_indexed_inline:Nn \l_latexcel_formula_seq
+    {
+        \int_compare:nNnTF { \int_mod:nn {##1} {2} } = {0}
+        {
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{SheetsString}{##2}}
+        }{
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {##2}
+        }
+    }
+
+    % \tl_show:N \l_latexcel_formula_out_tl
+
+    % -------------------------------------------------------------------------------------------
+
+    % Applying colour to addresses in the formula. ---------------------------------------------
+    \regex_split:nVN {((?:(?:[\w]*?!)|(?:'[\w\s]*?'!))?(?:(?:\$?[A-Z]+\$?[0-9]*:\$?[A-Z]+\$?[0-9]*)|(?:\$?[A-Z]+\$?[0-9])))} {\l_latexcel_formula_out_tl} \l_latexcel_formula_seq
+
+    \tl_clear:N \l_latexcel_formula_out_tl
+
+    % create a new sequence with every other item, skipping the first
+
+    \seq_map_indexed_inline:Nn \l_latexcel_formula_seq
+    {
+        \int_compare:nNnT { \int_mod:nn {##1} {2} } = {0}
+        {
+            \seq_put_right:Nn \l_latexcel_cell_addresses_seq {##2}
+        }
+    }
+
+    % remove duplicates
+
+    \seq_remove_duplicates:N \l_latexcel_cell_addresses_seq
+
+    
+    \seq_map_indexed_inline:Nn \l_latexcel_formula_seq
+    {
+        \int_compare:nNnTF { \int_mod:nn {##1} {2} } = {0}
+        {
+            \seq_find:NnN \l_latexcel_cell_addresses_seq {##2} \l_tmpa_int
+            \int_set:Nn \l_tmpa_int { \int_mod:nn { \l_tmpa_int - 1} { \l_latexcel_num_colours_int } + 1 }
+            \tl_set:Nn \l_tmpa_tl { \seq_item:Nn \l_latexcel_colours_seq { \l_tmpa_int } }
+            \tl_put_right:Nx \l_latexcel_formula_out_tl {\textcolor{\l_tmpa_tl}{##2}}
+        }{
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {##2}
+        }
+    }
+    % -------------------------------------------------------------------------------------------
+    {\color{SheetsText}\tl_use:N \l_latexcel_formula_out_tl}
+}
+
+\newcommand{\formula}[1]{\latexcel_color_formula:n {#1}}
+
+
 \ExplSyntaxOff
 
 \newcommand{\selectedcell}[2]{
@@ -627,3 +767,5 @@
 \colorlet{Sheets8}{SheetsBrown}
 %
 \definecolor{SheetsNumber}{HTML}{1155CC}
+\definecolor{SheetsString}{HTML}{008000}
+\definecolor{SheetsText}{HTML}{1F1F1F}

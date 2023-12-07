@@ -29,11 +29,12 @@
 
 \usepackage[most]{tcolorbox}
 
-\newtcolorbox{centeredbox}{
+\newtcolorbox{centeredbox}[1][]{
     colframe = ForegroundColour,
     colback = white,
     rounded corners,
     before upper = \centering,
+    #1
 }
 
 \newcommand{\loadexample}[1]{
@@ -44,11 +45,20 @@
     \end{centeredbox}
 }
 
+\newcommand{\loadexampleleft}[1]{
+    \qoinputlisting[mdframed options = {nobreak=true}]{examples/#1.tex}
+    \begin{centeredbox}[before upper = {}]
+        % \fontfamily{phv}\selectfont
+        \input{examples/#1.tex}
+    \end{centeredbox}
+}
+
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[sfdefault, light]{FiraSans}
 % \usepackage{helvet}
 % \renewcommand{\familydefault}{\sfdefault}
+\usepackage[scale = 0.8]{noto-mono}
 \usepackage[scale = 0.85]{FiraMono}
 
 \newcommand{\semibold}[1]{{\firabook #1}}
@@ -142,7 +152,7 @@
 \definecolor{Sheets_PaleBlue}{HTML}{E8F0FE}
 
 \newcommand{\cell}[2][SheetsOrange]{
-    \texttt{\color{#1}#2}
+    {\notomono\formula{#2}}
 }
 
 \begin{document}
@@ -169,9 +179,11 @@ The package is loaded as normal with \verb|\usepackage{latexcel}|. It relies on 
 
 Note that, since the graphics are rendered by \LaTeX, the font used will significantly impact the appearance of the tables. Of particular note, the ``{\texttt{\textit{\fontfamily{cmr}\selectfont f}}\hspace{-0.5ex}\texttt{\fontfamily{cmr}\selectfont x}}'' in the formula bar may appear strange in certain fonts. In this document, the \texttt{Fira Sans} and \texttt{Fira Mono} fonts are used, which are freely available on CTAN. The Helvetica font is also a very close match to the Arial font used by default in Google Sheets.
 
-\section{Environments and Colours}
+\section{Environments, Macros and Colours}
 
 The package provides a single environment, \verb|latexcel|, which takes one optional argument; a comma-separated list of key-value pairs. These are detailed in the next section. The contents of the environment should follow the same syntax as a \texttt{tabular} environment: lines delimited by a double backslash (\verb|\\|), and columns delimited by an ampersand (\verb|&|). The final line should \emphasis{not} be terminated with a double backslash.
+
+The package also provides a single macro, \verb|\formula|, which takes one argument; the formula to be parsed and coloured. This is detailed in the section below.
 
 In addition to the \verb|latexcel| environment, the package provides a number of colours which mimic those used in Google Sheets. These are shown in Table \ref{tab:colours}.
 
@@ -187,21 +199,34 @@ In addition to the \verb|latexcel| environment, the package provides a number of
         row colors = {BackgroundColour, Surface7},
         row separator = false,
         separator color = ForegroundColour
-    ]{|lcl|}
+    ]{|lll|}
         Name & Example & Alias \\
-        SheetsOrange    & \color{SheetsOrange}A1:B3 \tikz{\fill[SheetsOrange] (0,0) rectangle (1, 0.75em)} & Sheets1   \\
-        SheetsPurple    & \color{SheetsPurple}A1:B3 \tikz{\fill[SheetsPurple] (0,0) rectangle (1, 0.75em)} & Sheets2   \\
-        SheetsCyan      & \color{SheetsCyan}  A1:B3 \tikz{\fill[SheetsCyan  ] (0,0) rectangle (1, 0.75em)} & Sheets3   \\
-        SheetsMaroon    & \color{SheetsMaroon}A1:B3 \tikz{\fill[SheetsMaroon] (0,0) rectangle (1, 0.75em)} & Sheets4   \\
-        SheetsBlue      & \color{SheetsBlue}  A1:B3 \tikz{\fill[SheetsBlue  ] (0,0) rectangle (1, 0.75em)} & Sheets5   \\
-        SheetsYellow    & \color{SheetsYellow}A1:B3 \tikz{\fill[SheetsYellow] (0,0) rectangle (1, 0.75em)} & Sheets6   \\
-        SheetsGreen     & \color{SheetsGreen} A1:B3 \tikz{\fill[SheetsGreen ] (0,0) rectangle (1, 0.75em)} & Sheets7   \\
-        SheetsBrown     & \color{SheetsBrown} A1:B3 \tikz{\fill[SheetsBrown ] (0,0) rectangle (1, 0.75em)} & Sheets8 
+        SheetsOrange    & \tikz{\fill[SheetsOrange] (0,0) rectangle (1, 0.75em)} \color{SheetsOrange}A1:B3                                  & Sheets1   \\
+        SheetsPurple    & \tikz{\fill[SheetsPurple] (0,0) rectangle (1, 0.75em)} \color{SheetsPurple}A1:B3                                  & Sheets2   \\
+        SheetsCyan      & \tikz{\fill[SheetsCyan  ] (0,0) rectangle (1, 0.75em)} \color{SheetsCyan}  A1:B3                                  & Sheets3   \\
+        SheetsMaroon    & \tikz{\fill[SheetsMaroon] (0,0) rectangle (1, 0.75em)} \color{SheetsMaroon}A1:B3                                  & Sheets4   \\
+        SheetsBlue      & \tikz{\fill[SheetsBlue  ] (0,0) rectangle (1, 0.75em)} \color{SheetsBlue}  A1:B3                                  & Sheets5   \\
+        SheetsYellow    & \tikz{\fill[SheetsYellow] (0,0) rectangle (1, 0.75em)} \color{SheetsYellow}A1:B3                                  & Sheets6   \\
+        SheetsGreen     & \tikz{\fill[SheetsGreen ] (0,0) rectangle (1, 0.75em)} \color{SheetsGreen} A1:B3                                  & Sheets7   \\
+        SheetsBrown     & \tikz{\fill[SheetsBrown ] (0,0) rectangle (1, 0.75em)} \color{SheetsBrown} A1:B3                                  & Sheets8   \\
+        SheetsNumber    & \tikz{\fill[SheetsNumber] (0,0) rectangle (1, 0.75em)} \color{SheetsNumber}12\textcolor{ForegroundColour}{, }TRUE & --        \\
+        SheetsString    & \tikz{\fill[SheetsString] (0,0) rectangle (1, 0.75em)} \color{SheetsString}``str''                                & --        \\
+        SheetsText      & \tikz{\fill[SheetsText  ] (0,0) rectangle (1, 0.75em)} \color{SheetsText}  SUM                                    & --        
     \end{nicetable}
 
     \caption{The colours provided by the \texttt{latexcel} package. These are in the same order in which Google sheets will apply them to cell ranges in formulae.}
     \label{tab:colours}
 \end{table}
+
+\subsection{The \texttt{\textbackslash formula} Macro}
+
+The \verb|\formula| macro is provided to format formulae in the same way as Google Sheets. It takes one argument, which is the formula to be formatted. It applies colours to cell addresses, strings, and booleans in the same way as Google Sheets. The example below shows the output of the \verb|\formula| macro for a number of different formulae. Unfortunately, due to the lack of lookahead and lookbehind capabilities of the regex parsing in \LaTeX3, it is not possible to automatically colour numbers, so this will be visibly different to Google Sheets.
+
+\loadexampleleft{formula_colours}
+
+Cell addresses are coloured in order, repeating colours for repeated cell addresses (as in the third example for \cell{A2}, and fourth for both cell addresses). Booleans are coloured with the colour \texttt{SheetsNumber}, which is the same colour as numbers in Google Sheets. Strings are coloured with the colour \texttt{SheetsString}, which is the same colour as strings in Google Sheets. Note that the formula passed to the \verb|\formula| macro is not expanded in the same way as normal \LaTeX{}, and so dollar signs, ampersands, and most other special characters do not need to be escaped. However, including braces (\texttt{\{}, \texttt{\}}) may cause unexpected behaviour, and will very likely throw an (potentially cryptic) error. This also means that \LaTeX{} macros cannot be used in formulae.
+
+As with everything else, whilst this is modelled on Google Sheets, it is also extremely similar to the appearance of Excel formulae, with the only major difference being the colours and their order. If it is important to emulate Excel specifically, simply redefine the colours in table \ref{tab:colours} to match those used in Excel.
 
 \section{Options}
 
@@ -216,7 +241,7 @@ The \texttt{latexcel} environment takes a number of options, which are described
     array stretch   = 1.5,
 }
 
-\begin{descriptions}[width = 1.5in]
+\begin{descriptions}[width = 1.25in]
     row height              & 1             | Accepts any float, which is interpreted as a height in centimetres. This sets the height of all cells in the table, including headers. It is not possible to set the height of individual rows. \\
     padding rows            & 1             | Accepts any non-negative integer. This sets the number of additional rows rendered before and after the table. Be sure that this and the \texttt{starting row} option are set appropriately to avoid unexpected row numbering -- they are \emphasis{not} checked for consistency. \\
     padding row height      & 0.65          | Accepts any float, which is interpreted as a height in centimetres. This sets the height of the padding rows. \\
@@ -238,7 +263,8 @@ The \texttt{latexcel} environment takes a number of options, which are described
     border style            & \{\}          | Accepts any valid tikz style, such as ``\texttt{dashed, draw = red}''. This sets the style of the borders, appended to a default style of ``\texttt{line width = <width>, black}'', where \texttt{<width>} is specified by the \texttt{border width} option. \\
     border width            & 0.75pt        | Accepts any \LaTeX{} dimension, such as \texttt{1mm} or \texttt{0.5pt}. This sets the line width of the borders. \\
     selected cell           & \{\}          | Accepts a comma-separated pair of integers, which specify the row and column of the selected cell within the table; i.e. such that the first header is \texttt{\{1,1\}}. Padding cells can be selected, but setting this value to a cell which is not rendered (i.e, not within the table and not within the padding rows or columns) will throw an error. This is not checked internally. The selected cell will be highlighted, and its contents displayed in the formula bar if \texttt{formula} is not set. \\
-    formula                 & \{\}          | Accepts a token list (i.e, standard \LaTeX\ syntax) to be displayed in the formula bar. This is prepended by an equals sign, and rendered in the \texttt{\textbackslash ttfamily} font. If this is not set, the contents of the selected cell are displayed instead. \\
+    formula                 & \{\}          | Accepts a token list (i.e, standard \LaTeX\ syntax) to be displayed in the formula bar. This is prepended by an equals sign, and rendered in the \texttt{\textbackslash ttfamily} font via the \texttt{\textbackslash formula} macro. If this is not set, the contents of the selected cell are displayed instead, without the use of the \texttt{\textbackslash formula} macro.\\
+    auto formula            & true (true)   | Boolean. If \texttt{true}, the formula will be passed to the \texttt{\textbackslash formula} macro, which will format it in the same way as Google Sheets. If \texttt{false}, the formula will simply be rendered in the \texttt{\textbackslash ttfamily} font, allowing for manual formatting. \\
     show formula bar        & true (true)   | Boolean. If \texttt{true}, the formula bar is rendered, including the formula. If \texttt{false}, the entire formula bar is not rendered, and the picture stops at the top of the column labels. \\
     scale                   & 1             | Accepts any float. This scales the entire picture by the given factor using a \texttt{scalebox}.
 \end{descriptions}
@@ -315,5 +341,27 @@ The border styling can be specified with the \texttt{border style} option. This 
 The \texttt{selected cell} option can be used to highlight a cell, and display its contents in the formula bar. The example below highlights the cell \cell{D3}, which is in the 3\rd column and 2\nd row of the table. The coordinates are $1$-indexed, starting from the top-left cell of the table (i.e, the first header cell). Note that the cell contents are displayed in the formula bar, as well as the selected cell address in the top left.
 
 \loadexample{selected_cell}
+
+\clearpage
+
+\subsection{Formulae and the Formula Bar}
+
+The entire formula bar can be hidden with the \texttt{show formula bar} option. This is shown below; a cell is still selected, but its contents and address are not displayed.
+
+\loadexample{no_formula_bar}
+
+\clearpage
+
+By default, if a cell is selected then its contents will be shown in the formula bar. However, this can be overridden by providing the \texttt{formula} option with a value. This value will be displayed in the formula bar, preceded by an equals sign. The example below shows the same table as above, but with the formula \texttt{\formula{=AVERAGE(C3:C7)}} displayed in the formula bar. The colouring is applied automatically via the \texttt{\textbackslash formula} macro. To disable this, set \texttt{auto formula = false}. 
+
+\loadexample{formula}
+
+\clearpage
+
+With \texttt{auto formula = true}, the value passed to the \texttt{formula} option is accepted without expansion in the usual manner, and so most special characters such as dollar signs and ampersands do not need to be escaped. With \texttt{auto formula = false}, the value is treated as a normal token list (i.e., normal \LaTeX{}), and so special characters must be escaped. This does allow for the use of \LaTeX{} macros. The example below shows the same table as above, but with the formula formatted manually.
+
+\loadexample{formula_manual}
+
+\clearpage
 
 \end{document}
