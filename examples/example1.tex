@@ -1,0 +1,29 @@
+\documentclass[border = 1mm]{standalone}
+
+\usepackage{../latexcel}
+
+\usepackage[T1]{fontenc}
+\usepackage{noto-mono}
+\usepackage{helvet}
+
+\begin{document}
+\fontfamily{phv}\selectfont
+\begin{latexcel}[
+    header row color    = SheetsCornflowerBlue,
+    odd row color       = SheetsLightCornflowerBlue3,
+    header cell style   = {\color{white}\bfseries}, 
+    formula             = {IF(COUNTBLANK(C3:E3) < 3, C3 * 0.2 + D3 * 0.2 + E3 * 0.6, "-")},
+    selected cell       = {5, 2}
+]
+    Student         & Assignment 1  & Assignment 2  & Exam  & Total \\
+    Alice Brown     & 71            & 75            & 68    & 70.20 \\
+    Charlie Dunn    & 57            & 56            & 66    & 62.22 \\
+    Elenor Franklin & 55            & 45            & 57    & 53.95 \\
+    George Hall     & 67            & 69            & 56    & 60.93 \\
+    Iris Jenkins    &               &               &       & -     \\
+    Katie Langley   & 78            & 78            & 82    & 80.51 \\
+    Mark North      & 90            & 88            & 94    & 91.73 \\
+    Oscar Peters    &               &               &       & - 
+\end{latexcel}
+
+\end{document}

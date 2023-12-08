@@ -616,7 +616,7 @@
 \cs_generate_variant:Nn \tl_replace_all:Nnn {NVn}
 
 \seq_new:N \l_latexcel_colours_seq
-\seq_set_from_clist:Nn \l_latexcel_colours_seq {Sheets1, Sheets2, Sheets3, Sheets4, Sheets5, Sheets6, Sheets7, Sheets8}
+\seq_set_from_clist:Nn \l_latexcel_colours_seq {Formula1, Formula2, Formula3, Formula4, Formula5, Formula6, Formula7, Formula8}
 
 \int_new:N \l_latexcel_num_colours_int
 \int_set:Nn \l_latexcel_num_colours_int { \seq_count:N \l_latexcel_colours_seq }
@@ -636,7 +636,7 @@
 
     % Applying colour to TRUE and FALSE. ------------------------------------------------
     % Without functioning lookahead and lookbehind, numbers can't be reliably matched.
-    % color: SheetsNumber
+    % color: FormulaNumber
 
     \regex_split:nVN {(TRUE|FALSE)} \l_tmpa_str \l_latexcel_formula_seq
     
@@ -644,7 +644,7 @@
     {
         \int_compare:nNnTF { \int_mod:nn {##1} {2} } = {0}
         {
-            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{SheetsNumber}{##2}}
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{FormulaNumber}{##2}}
         }{
             \tl_put_right:Nn \l_latexcel_formula_out_tl {##2}
         }
@@ -653,7 +653,7 @@
     % -------------------------------------------------------------------------------------------
 
     % Applying colour to strings. ------------------------------------------------
-    % color: SheetsString
+    % color: FormulaString
     % simple regex to match strings. Doesn't handle escaped quotes.
 
     \regex_split:nVN {("[^"]*?")} \l_latexcel_formula_out_tl \l_latexcel_formula_seq
@@ -664,7 +664,7 @@
     {
         \int_compare:nNnTF { \int_mod:nn {##1} {2} } = {0}
         {
-            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{SheetsString}{##2}}
+            \tl_put_right:Nn \l_latexcel_formula_out_tl {\textcolor{FormulaString}{##2}}
         }{
             \tl_put_right:Nn \l_latexcel_formula_out_tl {##2}
         }
@@ -707,7 +707,7 @@
         }
     }
     % -------------------------------------------------------------------------------------------
-    {\color{SheetsText}\tl_use:N \l_latexcel_formula_out_tl}
+    {\color{FormulaText}\tl_use:N \l_latexcel_formula_out_tl}
 }
 
 \newcommand{\formula}[1]{\latexcel_color_formula:n {#1}}
@@ -748,24 +748,105 @@
     }
 }
 
-\definecolor{SheetsOrange}{HTML}{F7981E}
-\definecolor{SheetsPurple}{HTML}{7E3794}
-\definecolor{SheetsCyan}{HTML}{10A9CC}
-\definecolor{SheetsMaroon}{HTML}{A61D4C}
-\definecolor{SheetsBlue}{HTML}{4285F4}
-\definecolor{SheetsYellow}{HTML}{F4B409}
-\definecolor{SheetsGreen}{HTML}{65B045}
-\definecolor{SheetsBrown}{HTML}{795548}
+\definecolor{FormulaOrange}{HTML}{F7981E}
+\definecolor{FormulaPurple}{HTML}{7E3794}
+\definecolor{FormulaCyan}{HTML}{10A9CC}
+\definecolor{FormulaMaroon}{HTML}{A61D4C}
+\definecolor{FormulaBlue}{HTML}{4285F4}
+\definecolor{FormulaYellow}{HTML}{F4B409}
+\definecolor{FormulaGreen}{HTML}{65B045}
+\definecolor{FormulaBrown}{HTML}{795548}
 
-\colorlet{Sheets1}{SheetsOrange}
-\colorlet{Sheets2}{SheetsPurple}
-\colorlet{Sheets3}{SheetsCyan}
-\colorlet{Sheets4}{SheetsMaroon}
-\colorlet{Sheets5}{SheetsBlue}
-\colorlet{Sheets6}{SheetsYellow}
-\colorlet{Sheets7}{SheetsGreen}
-\colorlet{Sheets8}{SheetsBrown}
+\colorlet{Formula1}{FormulaOrange}
+\colorlet{Formula2}{FormulaPurple}
+\colorlet{Formula3}{FormulaCyan}
+\colorlet{Formula4}{FormulaMaroon}
+\colorlet{Formula5}{FormulaBlue}
+\colorlet{Formula6}{FormulaYellow}
+\colorlet{Formula7}{FormulaGreen}
+\colorlet{Formula8}{FormulaBrown}
 %
-\definecolor{SheetsNumber}{HTML}{1155CC}
-\definecolor{SheetsString}{HTML}{008000}
-\definecolor{SheetsText}{HTML}{1F1F1F}
+\definecolor{FormulaNumber}{HTML}{1155CC}
+\definecolor{FormulaString}{HTML}{008000}
+\definecolor{FormulaText}{HTML}{1F1F1F}
+
+\definecolor{SheetsGrey}{HTML}{CCCCCC}
+\definecolor{SheetsDarkGrey1}{HTML}{B7B7B7}
+\definecolor{SheetsDarkGrey2}{HTML}{999999}
+\definecolor{SheetsDarkGrey3}{HTML}{666666}
+\definecolor{SheetsDarkGrey4}{HTML}{434343}
+\definecolor{SheetsLightGrey1}{HTML}{D9D9D9}
+\definecolor{SheetsLightGrey2}{HTML}{EFEFEF}
+\definecolor{SheetsLightGrey3}{HTML}{F3F3F3}
+\definecolor{SheetsBerryRed}{HTML}{980000}
+\definecolor{SheetsDarkBerryRed1}{HTML}{A61C00}
+\definecolor{SheetsDarkBerryRed2}{HTML}{85200C}
+\definecolor{SheetsDarkBerryRed3}{HTML}{5B0F00}
+\definecolor{SheetsLightBerryRed1}{HTML}{CC4125}
+\definecolor{SheetsLightBerryRed2}{HTML}{DD7E6B}
+\definecolor{SheetsLightBerryRed3}{HTML}{E6B8AF}
+\definecolor{SheetsRed}{HTML}{FF0000}
+\definecolor{SheetsDarkRed1}{HTML}{CC0000}
+\definecolor{SheetsDarkRed2}{HTML}{990000}
+\definecolor{SheetsDarkRed3}{HTML}{660000}
+\definecolor{SheetsLightRed1}{HTML}{E06666}
+\definecolor{SheetsLightRed2}{HTML}{EA9999}
+\definecolor{SheetsLightRed3}{HTML}{F4CCCC}
+\definecolor{SheetsOrange}{HTML}{FF9900}
+\definecolor{SheetsDarkOrange1}{HTML}{E69138}
+\definecolor{SheetsDarkOrange2}{HTML}{B45F06}
+\definecolor{SheetsDarkOrange3}{HTML}{783F04}
+\definecolor{SheetsLightOrange1}{HTML}{F6B26B}
+\definecolor{SheetsLightOrange2}{HTML}{F9CB9C}
+\definecolor{SheetsLightOrange3}{HTML}{FCE5CD}
+\definecolor{SheetsYellow}{HTML}{FFFF00}
+\definecolor{SheetsDarkYellow1}{HTML}{F1C232}
+\definecolor{SheetsDarkYellow2}{HTML}{BF9000}
+\definecolor{SheetsDarkYellow3}{HTML}{7F6000}
+\definecolor{SheetsLightYellow1}{HTML}{FFD966}
+\definecolor{SheetsLightYellow2}{HTML}{FFE599}
+\definecolor{SheetsLightYellow3}{HTML}{FFF2CC}
+\definecolor{SheetsGreen}{HTML}{00FF00}
+\definecolor{SheetsDarkGreen1}{HTML}{6AA84F}
+\definecolor{SheetsDarkGreen2}{HTML}{38761D}
+\definecolor{SheetsDarkGreen3}{HTML}{274E13}
+\definecolor{SheetsLightGreen1}{HTML}{93C47D}
+\definecolor{SheetsLightGreen2}{HTML}{B6D7A8}
+\definecolor{SheetsLightGreen3}{HTML}{D9EAD3}
+\definecolor{SheetsCyan}{HTML}{00FFFF}
+\definecolor{SheetsDarkCyan1}{HTML}{45818E}
+\definecolor{SheetsDarkCyan2}{HTML}{134F5C}
+\definecolor{SheetsDarkCyan3}{HTML}{0C343D}
+\definecolor{SheetsLightCyan1}{HTML}{76A5AF}
+\definecolor{SheetsLightCyan2}{HTML}{A2C4C9}
+\definecolor{SheetsLightCyan3}{HTML}{D0E0E3}
+\definecolor{SheetsCornflowerBlue}{HTML}{4A86E8}
+\definecolor{SheetsDarkCornflowerBlue1}{HTML}{3C78D8}
+\definecolor{SheetsDarkCornflowerBlue2}{HTML}{1155CC}
+\definecolor{SheetsDarkCornflowerBlue3}{HTML}{1C4587}
+\definecolor{SheetsLightCornflowerBlue1}{HTML}{6D9EEB}
+\definecolor{SheetsLightCornflowerBlue2}{HTML}{A4C2F4}
+\definecolor{SheetsLightCornflowerBlue3}{HTML}{C9DAF8}
+\definecolor{SheetsBlue}{HTML}{0000FF}
+\definecolor{SheetsDarkBlue1}{HTML}{3D85C6}
+\definecolor{SheetsDarkBlue2}{HTML}{0B5394}
+\definecolor{SheetsDarkBlue3}{HTML}{073763}
+\definecolor{SheetsLightBlue1}{HTML}{6FA8DC}
+\definecolor{SheetsLightBlue2}{HTML}{9FC5E8}
+\definecolor{SheetsLightBlue3}{HTML}{CFE2F3}
+\definecolor{SheetsPurple}{HTML}{9900FF}
+\definecolor{SheetsDarkPurple1}{HTML}{674EA7}
+\definecolor{SheetsDarkPurple2}{HTML}{351C75}
+\definecolor{SheetsDarkPurple3}{HTML}{20124D}
+\definecolor{SheetsLightPurple1}{HTML}{8E7CC3}
+\definecolor{SheetsLightPurple2}{HTML}{B4A7D6}
+\definecolor{SheetsLightPurple3}{HTML}{D9D2E9}
+\definecolor{SheetsMagenta}{HTML}{FF00FF}
+\definecolor{SheetsDarkMagenta1}{HTML}{A64D79}
+\definecolor{SheetsDarkMagenta2}{HTML}{741B47}
+\definecolor{SheetsDarkMagenta3}{HTML}{4C1130}
+\definecolor{SheetsLightMagenta1}{HTML}{C27BA0}
+\definecolor{SheetsLightMagenta2}{HTML}{D5A6BD}
+\definecolor{SheetsLightMagenta3}{HTML}{EAD1DC}
+\definecolor{SheetsBlack}{HTML}{000000}
+\definecolor{SheetsWhite}{HTML}{FFFFFF}

@@ -64,6 +64,7 @@
 \newcommand{\semibold}[1]{{\firabook #1}}
 \newcommand{\emphasis}[1]{{\color{Red}\semibold{#1}}}
 \usepackage{indentfirst}
+\setlength{\parskip}{1.5em}
 
 \renewcommand*\oldstylenums[1]{{#1}}
 \renewcommand{\bfdefault}{sb}
@@ -151,7 +152,7 @@
 \definecolor{Sheets_Blue}{HTML}{5B95F9}
 \definecolor{Sheets_PaleBlue}{HTML}{E8F0FE}
 
-\newcommand{\cell}[2][SheetsOrange]{
+\newcommand{\cell}[2][FormulaOrange]{
     {\notomono\formula{#2}}
 }
 
@@ -180,6 +181,7 @@ The package is loaded as normal with \verb|\usepackage{latexcel}|. It relies on 
 Note that, since the graphics are rendered by \LaTeX, the font used will significantly impact the appearance of the tables. Of particular note, the ``{\texttt{\textit{\fontfamily{cmr}\selectfont f}}\hspace{-0.5ex}\texttt{\fontfamily{cmr}\selectfont x}}'' in the formula bar may appear strange in certain fonts. In this document, the \texttt{Fira Sans} and \texttt{Fira Mono} fonts are used, which are freely available on CTAN. The Helvetica font is also a very close match to the Arial font used by default in Google Sheets.
 
 \section{Environments, Macros and Colours}
+\label{sec:environments_macros_colours}
 
 The package provides a single environment, \verb|latexcel|, which takes one optional argument; a comma-separated list of key-value pairs. These are detailed in the next section. The contents of the environment should follow the same syntax as a \texttt{tabular} environment: lines delimited by a double backslash (\verb|\\|), and columns delimited by an ampersand (\verb|&|). The final line should \emphasis{not} be terminated with a double backslash.
 
@@ -201,22 +203,24 @@ In addition to the \verb|latexcel| environment, the package provides a number of
         separator color = ForegroundColour
     ]{|lll|}
         Name & Example & Alias \\
-        SheetsOrange    & \tikz{\fill[SheetsOrange] (0,0) rectangle (1, 0.75em)} \color{SheetsOrange}A1:B3                                  & Sheets1   \\
-        SheetsPurple    & \tikz{\fill[SheetsPurple] (0,0) rectangle (1, 0.75em)} \color{SheetsPurple}A1:B3                                  & Sheets2   \\
-        SheetsCyan      & \tikz{\fill[SheetsCyan  ] (0,0) rectangle (1, 0.75em)} \color{SheetsCyan}  A1:B3                                  & Sheets3   \\
-        SheetsMaroon    & \tikz{\fill[SheetsMaroon] (0,0) rectangle (1, 0.75em)} \color{SheetsMaroon}A1:B3                                  & Sheets4   \\
-        SheetsBlue      & \tikz{\fill[SheetsBlue  ] (0,0) rectangle (1, 0.75em)} \color{SheetsBlue}  A1:B3                                  & Sheets5   \\
-        SheetsYellow    & \tikz{\fill[SheetsYellow] (0,0) rectangle (1, 0.75em)} \color{SheetsYellow}A1:B3                                  & Sheets6   \\
-        SheetsGreen     & \tikz{\fill[SheetsGreen ] (0,0) rectangle (1, 0.75em)} \color{SheetsGreen} A1:B3                                  & Sheets7   \\
-        SheetsBrown     & \tikz{\fill[SheetsBrown ] (0,0) rectangle (1, 0.75em)} \color{SheetsBrown} A1:B3                                  & Sheets8   \\
-        SheetsNumber    & \tikz{\fill[SheetsNumber] (0,0) rectangle (1, 0.75em)} \color{SheetsNumber}12\textcolor{ForegroundColour}{, }TRUE & --        \\
-        SheetsString    & \tikz{\fill[SheetsString] (0,0) rectangle (1, 0.75em)} \color{SheetsString}``str''                                & --        \\
-        SheetsText      & \tikz{\fill[SheetsText  ] (0,0) rectangle (1, 0.75em)} \color{SheetsText}  SUM                                    & --        
+        FormulaOrange    & \tikz{\fill[FormulaOrange] (0,0) rectangle (1, 0.75em)} \color{FormulaOrange}A1:B3                                  & Formula1   \\
+        FormulaPurple    & \tikz{\fill[FormulaPurple] (0,0) rectangle (1, 0.75em)} \color{FormulaPurple}A1:B3                                  & Formula2   \\
+        FormulaCyan      & \tikz{\fill[FormulaCyan  ] (0,0) rectangle (1, 0.75em)} \color{FormulaCyan}  A1:B3                                  & Formula3   \\
+        FormulaMaroon    & \tikz{\fill[FormulaMaroon] (0,0) rectangle (1, 0.75em)} \color{FormulaMaroon}A1:B3                                  & Formula4   \\
+        FormulaBlue      & \tikz{\fill[FormulaBlue  ] (0,0) rectangle (1, 0.75em)} \color{FormulaBlue}  A1:B3                                  & Formula5   \\
+        FormulaYellow    & \tikz{\fill[FormulaYellow] (0,0) rectangle (1, 0.75em)} \color{FormulaYellow}A1:B3                                  & Formula6   \\
+        FormulaGreen     & \tikz{\fill[FormulaGreen ] (0,0) rectangle (1, 0.75em)} \color{FormulaGreen} A1:B3                                  & Formula7   \\
+        FormulaBrown     & \tikz{\fill[FormulaBrown ] (0,0) rectangle (1, 0.75em)} \color{FormulaBrown} A1:B3                                  & Formula8   \\
+        FormulaNumber    & \tikz{\fill[FormulaNumber] (0,0) rectangle (1, 0.75em)} \color{FormulaNumber}12\textcolor{ForegroundColour}{, }TRUE & --        \\
+        FormulaString    & \tikz{\fill[FormulaString] (0,0) rectangle (1, 0.75em)} \color{FormulaString}``str''                                & --        \\
+        FormulaText      & \tikz{\fill[FormulaText  ] (0,0) rectangle (1, 0.75em)} \color{FormulaText}  SUM                                    & --        
     \end{nicetable}
 
     \caption{The colours provided by the \texttt{latexcel} package. These are in the same order in which Google sheets will apply them to cell ranges in formulae.}
     \label{tab:colours}
 \end{table}
+
+Additionally, all colours available in the Google Sheets colour palette are provided, following the same naming convention. For example, the colour \tikz{\fill[SheetsCornflowerBlue] (0,0) rectangle (1, 0.75em)}, which is known in Google Sheets as ``cornflower blue'', is available as \texttt{SheetsCornflowerBlue} in \LaTeX. Its variant, \tikz{\fill[SheetsLightCornflowerBlue2] (0,0) rectangle (1, 0.75em)}, known in Google Sheets as ``light cornflower blue 2'', is available in \LaTeX{} as \texttt{SheetsLightCornflowerBlue2}. The full list of colours can be found in the appendix.
 
 \subsection{The \texttt{\textbackslash formula} Macro}
 
@@ -224,7 +228,7 @@ The \verb|\formula| macro is provided to format formulae in the same way as Goog
 
 \loadexampleleft{formula_colours}
 
-Cell addresses are coloured in order, repeating colours for repeated cell addresses (as in the third example for \cell{A2}, and fourth for both cell addresses). Booleans are coloured with the colour \texttt{SheetsNumber}, which is the same colour as numbers in Google Sheets. Strings are coloured with the colour \texttt{SheetsString}, which is the same colour as strings in Google Sheets. Note that the formula passed to the \verb|\formula| macro is not expanded in the same way as normal \LaTeX{}, and so dollar signs, ampersands, and most other special characters do not need to be escaped. However, including braces (\texttt{\{}, \texttt{\}}) may cause unexpected behaviour, and will very likely throw an (potentially cryptic) error. This also means that \LaTeX{} macros cannot be used in formulae.
+Cell addresses are coloured in order, repeating colours for repeated cell addresses (as in the third example for \cell{A2}, and fourth for both cell addresses). Booleans are coloured with the colour \texttt{FormulaNumber}, which is the same colour as numbers in Google Sheets. Strings are coloured with the colour \texttt{FormulaString}, which is the same colour as strings in Google Sheets. Note that the formula passed to the \verb|\formula| macro is not expanded in the same way as normal \LaTeX{}, and so dollar signs, ampersands, and most other special characters do not need to be escaped. However, including braces (\texttt{\{}, \texttt{\}}) may cause unexpected behaviour, and will very likely throw an (potentially cryptic) error. This also means that \LaTeX{} macros cannot be used in formulae.
 
 As with everything else, whilst this is modelled on Google Sheets, it is also extremely similar to the appearance of Excel formulae, with the only major difference being the colours and their order. If it is important to emulate Excel specifically, simply redefine the colours in table \ref{tab:colours} to match those used in Excel.
 
@@ -302,6 +306,8 @@ The \texttt{padding rows} and \texttt{padding columns} options can be used speci
 
 \loadexample{no_padding}
 
+\clearpage
+
 In the example below, the table starts at \cell{F3}, with $2$ padding columns and $1$ padding row. Note that the row and column numbering is absolute, so the padding rows and columns are numbered relative to the starting row and column. This means that the labelled columns start at \cell{D} and the labelled rows start at \cell{2}.
 
 \loadexample{padding}
@@ -363,5 +369,96 @@ With \texttt{auto formula = true}, the value passed to the \texttt{formula} opti
 \loadexample{formula_manual}
 
 \clearpage
+
+\appendix
+
+\section{Colours}
+
+The additional colours provided by the \texttt{latexcel} package which are not included in section \ref{sec:environments_macros_colours} are shown below.
+
+\begin{longtable}{|lll|}
+    \hline
+    Google Sheets Name      & \LaTeX{} Name              & Example                                                                                                                              \\\hline\endhead
+    \hline\endfoot
+    black                   & \ttfamily SheetsBlack                & \tikz{\fill[SheetsBlack               ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsBlack}               \ttfamily\#000000 \\
+    dark grey 4             & \ttfamily SheetsDarkGrey4            & \tikz{\fill[SheetsDarkGrey4           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGrey4}           \ttfamily\#434343 \\
+    dark grey 3             & \ttfamily SheetsDarkGrey3            & \tikz{\fill[SheetsDarkGrey3           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGrey3}           \ttfamily\#666666 \\
+    dark grey 2             & \ttfamily SheetsDarkGrey2            & \tikz{\fill[SheetsDarkGrey2           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGrey2}           \ttfamily\#999999 \\
+    dark grey 1             & \ttfamily SheetsDarkGrey1            & \tikz{\fill[SheetsDarkGrey1           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGrey1}           \ttfamily\#B7B7B7 \\
+    light grey 1            & \ttfamily SheetsLightGrey1           & \tikz{\fill[SheetsLightGrey1          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGrey1}          \ttfamily\#D9D9D9 \\
+    light grey 2            & \ttfamily SheetsLightGrey2           & \tikz{\fill[SheetsLightGrey2          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGrey2}          \ttfamily\#EFEFEF \\
+    light grey 3            & \ttfamily SheetsLightGrey3           & \tikz{\fill[SheetsLightGrey3          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGrey3}          \ttfamily\#F3F3F3 \\
+    white                   & \ttfamily SheetsWhite                & \tikz{\fill[SheetsWhite               ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsWhite}               \ttfamily\#FFFFFF \\
+    berry red               & \ttfamily SheetsBerryRed             & \tikz{\fill[SheetsBerryRed            ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsBerryRed}            \ttfamily\#980000 \\
+    light berry red 3       & \ttfamily SheetsLightBerryRed3       & \tikz{\fill[SheetsLightBerryRed3      ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBerryRed3}      \ttfamily\#E6B8AF \\
+    light berry red 2       & \ttfamily SheetsLightBerryRed2       & \tikz{\fill[SheetsLightBerryRed2      ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBerryRed2}      \ttfamily\#DD7E6B \\
+    light berry red 1       & \ttfamily SheetsLightBerryRed1       & \tikz{\fill[SheetsLightBerryRed1      ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBerryRed1}      \ttfamily\#CC4125 \\
+    dark berry red 1        & \ttfamily SheetsDarkBerryRed1        & \tikz{\fill[SheetsDarkBerryRed1       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBerryRed1}       \ttfamily\#A61C00 \\
+    dark berry red 2        & \ttfamily SheetsDarkBerryRed2        & \tikz{\fill[SheetsDarkBerryRed2       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBerryRed2}       \ttfamily\#85200C \\
+    dark berry red 3        & \ttfamily SheetsDarkBerryRed3        & \tikz{\fill[SheetsDarkBerryRed3       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBerryRed3}       \ttfamily\#5B0F00 \\
+    red                     & \ttfamily SheetsRed                  & \tikz{\fill[SheetsRed                 ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsRed}                 \ttfamily\#FF0000 \\
+    light red 3             & \ttfamily SheetsLightRed3            & \tikz{\fill[SheetsLightRed3           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightRed3}           \ttfamily\#F4CCCC \\
+    light red 2             & \ttfamily SheetsLightRed2            & \tikz{\fill[SheetsLightRed2           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightRed2}           \ttfamily\#EA9999 \\
+    light red 1             & \ttfamily SheetsLightRed1            & \tikz{\fill[SheetsLightRed1           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightRed1}           \ttfamily\#E06666 \\
+    dark red 1              & \ttfamily SheetsDarkRed1             & \tikz{\fill[SheetsDarkRed1            ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkRed1}            \ttfamily\#CC0000 \\
+    dark red 2              & \ttfamily SheetsDarkRed2             & \tikz{\fill[SheetsDarkRed2            ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkRed2}            \ttfamily\#990000 \\
+    dark red 3              & \ttfamily SheetsDarkRed3             & \tikz{\fill[SheetsDarkRed3            ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkRed3}            \ttfamily\#660000 \\
+    orange                  & \ttfamily SheetsOrange               & \tikz{\fill[SheetsOrange              ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsOrange}              \ttfamily\#FF9900 \\
+    light orange 3          & \ttfamily SheetsLightOrange3         & \tikz{\fill[SheetsLightOrange3        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightOrange3}        \ttfamily\#FCE5CD \\
+    light orange 2          & \ttfamily SheetsLightOrange2         & \tikz{\fill[SheetsLightOrange2        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightOrange2}        \ttfamily\#F9CB9C \\
+    light orange 1          & \ttfamily SheetsLightOrange1         & \tikz{\fill[SheetsLightOrange1        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightOrange1}        \ttfamily\#F6B26B \\
+    dark orange 1           & \ttfamily SheetsDarkOrange1          & \tikz{\fill[SheetsDarkOrange1         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkOrange1}         \ttfamily\#E69138 \\
+    dark orange 2           & \ttfamily SheetsDarkOrange2          & \tikz{\fill[SheetsDarkOrange2         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkOrange2}         \ttfamily\#B45F06 \\
+    dark orange 3           & \ttfamily SheetsDarkOrange3          & \tikz{\fill[SheetsDarkOrange3         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkOrange3}         \ttfamily\#783F04 \\
+    yellow                  & \ttfamily SheetsYellow               & \tikz{\fill[SheetsYellow              ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsYellow}              \ttfamily\#FFFF00 \\
+    light yellow 3          & \ttfamily SheetsLightYellow3         & \tikz{\fill[SheetsLightYellow3        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightYellow3}        \ttfamily\#FFF2CC \\
+    light yellow 2          & \ttfamily SheetsLightYellow2         & \tikz{\fill[SheetsLightYellow2        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightYellow2}        \ttfamily\#FFE599 \\
+    light yellow 1          & \ttfamily SheetsLightYellow1         & \tikz{\fill[SheetsLightYellow1        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightYellow1}        \ttfamily\#FFD966 \\
+    dark yellow 1           & \ttfamily SheetsDarkYellow1          & \tikz{\fill[SheetsDarkYellow1         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkYellow1}         \ttfamily\#F1C232 \\
+    dark yellow 2           & \ttfamily SheetsDarkYellow2          & \tikz{\fill[SheetsDarkYellow2         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkYellow2}         \ttfamily\#BF9000 \\
+    dark yellow 3           & \ttfamily SheetsDarkYellow3          & \tikz{\fill[SheetsDarkYellow3         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkYellow3}         \ttfamily\#7F6000 \\
+    green                   & \ttfamily SheetsGreen                & \tikz{\fill[SheetsGreen               ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsGreen}               \ttfamily\#00FF00 \\
+    light green 3           & \ttfamily SheetsLightGreen3          & \tikz{\fill[SheetsLightGreen3         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGreen3}         \ttfamily\#D9EAD3 \\
+    light green 2           & \ttfamily SheetsLightGreen2          & \tikz{\fill[SheetsLightGreen2         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGreen2}         \ttfamily\#B6D7A8 \\
+    light green 1           & \ttfamily SheetsLightGreen1          & \tikz{\fill[SheetsLightGreen1         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightGreen1}         \ttfamily\#93C47D \\
+    dark green 1            & \ttfamily SheetsDarkGreen1           & \tikz{\fill[SheetsDarkGreen1          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGreen1}          \ttfamily\#6AA84F \\
+    dark green 2            & \ttfamily SheetsDarkGreen2           & \tikz{\fill[SheetsDarkGreen2          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGreen2}          \ttfamily\#38761D \\
+    dark green 3            & \ttfamily SheetsDarkGreen3           & \tikz{\fill[SheetsDarkGreen3          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkGreen3}          \ttfamily\#274E13 \\
+    cyan                    & \ttfamily SheetsCyan                 & \tikz{\fill[SheetsCyan                ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsCyan}                \ttfamily\#00FFFF \\
+    light cyan 3            & \ttfamily SheetsLightCyan3           & \tikz{\fill[SheetsLightCyan3          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCyan3}          \ttfamily\#D0E0E3 \\
+    light cyan 2            & \ttfamily SheetsLightCyan2           & \tikz{\fill[SheetsLightCyan2          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCyan2}          \ttfamily\#A2C4C9 \\
+    light cyan 1            & \ttfamily SheetsLightCyan1           & \tikz{\fill[SheetsLightCyan1          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCyan1}          \ttfamily\#76A5AF \\
+    dark cyan 1             & \ttfamily SheetsDarkCyan1            & \tikz{\fill[SheetsDarkCyan1           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCyan1}           \ttfamily\#45818E \\
+    dark cyan 2             & \ttfamily SheetsDarkCyan2            & \tikz{\fill[SheetsDarkCyan2           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCyan2}           \ttfamily\#134F5C \\
+    dark cyan 3             & \ttfamily SheetsDarkCyan3            & \tikz{\fill[SheetsDarkCyan3           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCyan3}           \ttfamily\#0C343D \\
+    cornflower blue         & \ttfamily SheetsCornflowerBlue       & \tikz{\fill[SheetsCornflowerBlue      ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsCornflowerBlue}      \ttfamily\#4A86E8 \\
+    light cornflower blue 3 & \ttfamily SheetsLightCornflowerBlue3 & \tikz{\fill[SheetsLightCornflowerBlue3] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCornflowerBlue3}\ttfamily\#C9DAF8 \\
+    light cornflower blue 2 & \ttfamily SheetsLightCornflowerBlue2 & \tikz{\fill[SheetsLightCornflowerBlue2] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCornflowerBlue2}\ttfamily\#A4C2F4 \\
+    light cornflower blue 1 & \ttfamily SheetsLightCornflowerBlue1 & \tikz{\fill[SheetsLightCornflowerBlue1] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightCornflowerBlue1}\ttfamily\#6D9EEB \\
+    dark cornflower blue 1  & \ttfamily SheetsDarkCornflowerBlue1  & \tikz{\fill[SheetsDarkCornflowerBlue1 ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCornflowerBlue1} \ttfamily\#3C78D8 \\
+    dark cornflower blue 2  & \ttfamily SheetsDarkCornflowerBlue2  & \tikz{\fill[SheetsDarkCornflowerBlue2 ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCornflowerBlue2} \ttfamily\#1155CC \\
+    dark cornflower blue 3  & \ttfamily SheetsDarkCornflowerBlue3  & \tikz{\fill[SheetsDarkCornflowerBlue3 ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkCornflowerBlue3} \ttfamily\#1C4587 \\
+    blue                    & \ttfamily SheetsBlue                 & \tikz{\fill[SheetsBlue                ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsBlue}                \ttfamily\#0000FF \\
+    light blue 3            & \ttfamily SheetsLightBlue3           & \tikz{\fill[SheetsLightBlue3          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBlue3}          \ttfamily\#CFE2F3 \\
+    light blue 2            & \ttfamily SheetsLightBlue2           & \tikz{\fill[SheetsLightBlue2          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBlue2}          \ttfamily\#9FC5E8 \\
+    light blue 1            & \ttfamily SheetsLightBlue1           & \tikz{\fill[SheetsLightBlue1          ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightBlue1}          \ttfamily\#6FA8DC \\
+    dark blue 1             & \ttfamily SheetsDarkBlue1            & \tikz{\fill[SheetsDarkBlue1           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBlue1}           \ttfamily\#3D85C6 \\
+    dark blue 2             & \ttfamily SheetsDarkBlue2            & \tikz{\fill[SheetsDarkBlue2           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBlue2}           \ttfamily\#0B5394 \\
+    dark blue 3             & \ttfamily SheetsDarkBlue3            & \tikz{\fill[SheetsDarkBlue3           ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkBlue3}           \ttfamily\#073763 \\
+    purple                  & \ttfamily SheetsPurple               & \tikz{\fill[SheetsPurple              ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsPurple}              \ttfamily\#9900FF \\
+    light purple 3          & \ttfamily SheetsLightPurple3         & \tikz{\fill[SheetsLightPurple3        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightPurple3}        \ttfamily\#D9D2E9 \\
+    light purple 2          & \ttfamily SheetsLightPurple2         & \tikz{\fill[SheetsLightPurple2        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightPurple2}        \ttfamily\#B4A7D6 \\
+    light purple 1          & \ttfamily SheetsLightPurple1         & \tikz{\fill[SheetsLightPurple1        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightPurple1}        \ttfamily\#8E7CC3 \\
+    dark purple 1           & \ttfamily SheetsDarkPurple1          & \tikz{\fill[SheetsDarkPurple1         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkPurple1}         \ttfamily\#674EA7 \\
+    dark purple 2           & \ttfamily SheetsDarkPurple2          & \tikz{\fill[SheetsDarkPurple2         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkPurple2}         \ttfamily\#351C75 \\
+    dark purple 3           & \ttfamily SheetsDarkPurple3          & \tikz{\fill[SheetsDarkPurple3         ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkPurple3}         \ttfamily\#20124D \\
+    magenta                 & \ttfamily SheetsMagenta              & \tikz{\fill[SheetsMagenta             ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsMagenta}             \ttfamily\#FF00FF \\
+    light magenta 3         & \ttfamily SheetsLightMagenta3        & \tikz{\fill[SheetsLightMagenta3       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightMagenta3}       \ttfamily\#EAD1DC \\
+    light magenta 2         & \ttfamily SheetsLightMagenta2        & \tikz{\fill[SheetsLightMagenta2       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightMagenta2}       \ttfamily\#D5A6BD \\
+    light magenta 1         & \ttfamily SheetsLightMagenta1        & \tikz{\fill[SheetsLightMagenta1       ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsLightMagenta1}       \ttfamily\#C27BA0 \\
+    dark magenta 1          & \ttfamily SheetsDarkMagenta1         & \tikz{\fill[SheetsDarkMagenta1        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkMagenta1}        \ttfamily\#A64D79 \\
+    dark magenta 2          & \ttfamily SheetsDarkMagenta2         & \tikz{\fill[SheetsDarkMagenta2        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkMagenta2}        \ttfamily\#741B47 \\
+    dark magenta 3          & \ttfamily SheetsDarkMagenta3         & \tikz{\fill[SheetsDarkMagenta3        ] (0,0) rectangle (1, 0.75em);}\ \color{SheetsDarkMagenta3}        \ttfamily\#4C1130 \\
+\end{longtable}
 
 \end{document}
