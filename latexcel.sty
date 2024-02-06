@@ -675,7 +675,7 @@
     % -------------------------------------------------------------------------------------------
 
     % Applying colour to addresses in the formula. ---------------------------------------------
-    \regex_split:nVN {((?:(?:[\w]*?!)|(?:'[\w\s]*?'!))?(?:(?:\$?[A-Z]+\$?[0-9]*:\$?[A-Z]+\$?[0-9]*)|(?:\$?[A-Z]+\$?[0-9])))} {\l_latexcel_formula_out_tl} \l_latexcel_formula_seq
+    \regex_split:nVN {((?:(?:[\w]*?!)|(?:'[\w\s]*?'!))?(?:(?:\$?[A-Z]+\$?[0-9]*:\$?[A-Z]+\$?[0-9]*)|(?:\$?[A-Z]+\$?[0-9]+)))} {\l_latexcel_formula_out_tl} \l_latexcel_formula_seq
 
     \tl_clear:N \l_latexcel_formula_out_tl
 
